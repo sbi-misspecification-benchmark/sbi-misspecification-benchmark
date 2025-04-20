@@ -22,3 +22,31 @@ def test_throw_error():
     """Example test: Checks if throw Exception works correctly."""
     with pytest.raises(ZeroDivisionError):
         _ = 1 / 0
+
+def test_string():
+    """Example test: Checks if string conotation works correctly."""
+    string1 = "Hello"
+    string2 = "World"
+    result = string1 + " " + string2
+    assert result == "Hello World", "String concatenation result should be 'Hello World'"
+
+def test_list():
+    """Example test: Checks if list appending works correctly."""
+    my_list = [1, 2, 3]
+    my_list.append(4)
+    assert my_list == [1, 2, 3, 4], "List should have 4 appended to it"
+
+def test_hashmap():
+    """Example test: Checks if Hashmap value retrieval works correctly."""
+    my_dict = {"a": 1, "b": 2}
+    assert my_dict["a"] == 1, "Key 'a' should return value 1"
+
+def test_mod():
+    """Example test: Checks if modulo works correctly."""
+    number = 4
+    assert number % 2 == 0, "Number should be even"
+
+def test_set():
+    """Example test: Checks if set operations works correctly."""
+    my_set = {1, 2, 3}
+    assert 2 in my_set, "Set should contain the number 2"
