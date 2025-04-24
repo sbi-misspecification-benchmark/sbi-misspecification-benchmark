@@ -10,8 +10,48 @@ def list_methods(): # dummy
     methods = ["Method 1: ExampleMethodA", "Method 2: ExampleMethodB"]
     return "\n".join(methods)
 
+def help_function(parser):
+    # guides the user through the program
+    print("CLI for interacting with the sbi-misspecification-benchmark tool.")
+    print("Choose one of the following commands: \n  1) run\n  2) list-methods\n  3) help/exit")
+    choice= input("Enter a number ").strip()
+    if choice == "1":
+        handle_command(argparse.Namespace(metrics=None))
+    elif choice == "2":
+        print(list_methods())
+    elif choice == "3":
+        parser.print_help()
+        return
+    else:
+        print("Invalid choice.")
+        help_function(parser)
+
+
+
+
+def handle_command(args):
+    # user can either enter valid metrics manually or choose them
+    print("Enter metrics or press Enter to choose interactively")
+    metrics_input = input(args.metrics or "").strip().lower()
+    if metrics_input:
+        user_metrics = [m.strip() for m in metrics_input.split(",")]
+
+        invalid = [m for m in user_metrics if m not in valid_metrics]
+
+        if invalid:
+            print(f"Invalid metrics: {', '.join(invalid)}")
+            print(f"Valid metrics are: {', '.join(valid_metrics)}")
+        else:
+            print(f"Running the tool with metrics: {', '.join(user_metrics)}")
+    else:
+        selected = ask_user_for_metrics()
+        if not selected:
+            print("No metrics selected.")
+        else:
+            print(f"Running the tool with metrics: {', '.join(sorted(selected))}")
+
 def ask_user_for_metrics():
-    valid_metrics = ["ppc", "mmd", "c2st", "probability_true"]
+    # function to choose the metrics
     selected = list()
 
     print("You can now choose the metrics to be included")
@@ -49,26 +89,11 @@ def main():
 
     # Command handling
     if args.command == "run":
-        print("Enter metrics or press Enter to choose")
-        metrics_input = input(args.metrics or "").strip().lower()
-        if metrics_input:
-            user_metrics = [m.strip() for m in metrics_input.split(",")]
+        handle_command(args)
+    elif args.command is None:
+        help_function(parser)
 
-            invalid = [m for m in user_metrics if m not in valid_metrics]
 
-            if invalid:
-                print(f"Invalid metrics: {', '.join(invalid)}")
-                print(f"Valid metrics are: {', '.join(valid_metrics)}")
-            else:
-                print(f"Running the tool with metrics: {', '.join(user_metrics)}")
-        else:
-            selected = ask_user_for_metrics()
-            if not selected:
-                print("No metrics selected.")
-            else:
-                print(f"Running the tool with metrics: {', '.join(sorted(selected))}")
-    else:
-        parser.print_help()
 
 if __name__ == "__main__":
     main()
