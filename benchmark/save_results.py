@@ -4,52 +4,53 @@ from pathlib import Path
 from datetime import datetime
 
 
-def save_results(results, method, task, seed, format="json", **kwargs):
-    """
-    Saves benchmark results to a structured file (JSON or CSV) in a 'results/' folder.
+def save_results(results, method, task, seed, file_format="json", **kwargs):
+    """Save benchmark results as JSON or CSV in the 'results/' folder."""
 
-    Args:
-        results (dict): TODO
-        method (str): TODO
-        task (str): TODO
-        seed (int or str): TODO
-        format (str): TODO
-        **kwargs: TODO
-    """
-    # Ensure the results folder exists
-    Path("results").mkdir(parents=True, exist_ok=True)
+    # Normalize file format input (accepts "JSON", "Json", etc.)
+    file_format = file_format.lower()
 
-    # Add timestamp once and reuse
+    # Create the results folder if it doesn't exist
+    Path("results").mkdir(exist_ok=True)
+
+    # Prepare file path and name
     timestamp = datetime.utcnow().isoformat()
-
-    # Combine all data into a flat dictionary for CSV, or nested for JSON
-    result_data = {
-        "method": method,
-        "task": task,
-        "seed": seed,
-        "timestamp": timestamp,
-        **kwargs
-    }
-
-    suffix = ".json" if format == "json" else ".csv"
-    filename = f"{method}_{task}_seed{seed}{suffix}"
+    filename = f"{method}_{task}_seed{seed}.{file_format}"
     filepath = Path("results") / filename
 
-    if format == "json":
-        # For JSON, nest the metrics
-        result_data["metrics"] = results
-        with open(filepath, "w") as file:
-            json.dump(result_data, file, indent=4)
+    if file_format == "json":
+        # Prepare nested output for JSON
+        output = {
+            "method": method,
+            "task": task,
+            "seed": seed,
+            "timestamp": timestamp,
+            **kwargs,           # Add any extra user-provided metadata
+            "metrics": results  # Save actual benchmark results under "metrics"
+        }
+        # Write JSON file
+        with open(filepath, "w") as f:
+            json.dump(output, f, indent=4)
 
-    elif format == "csv":
-        # For CSV, flatten the metrics into the top level
-        csv_row = {**result_data, **results}
-        with open(filepath, "w", newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=csv_row.keys())
+    elif file_format == "csv":
+        # Prepare flat row for CSV (metrics merged into top level)
+        row = {
+            "method": method,
+            "task": task,
+            "seed": seed,
+            "timestamp": timestamp,
+            **kwargs,
+            **results
+        }
+        # Write CSV file
+        with open(filepath, "w", newline="") as f:
+            writer = csv.DictWriter(f, fieldnames=row.keys())
             writer.writeheader()
-            writer.writerow(csv_row)
+            writer.writerow(row)
 
     else:
-        raise ValueError(f"Unsupported format: {format}. Use 'json' or 'csv'.")
+        # Handle invalid format input
+        raise ValueError(f"Unsupported format: {file_format}. Use 'json' or 'csv'.")
 
+    # Confirm result saving in console
     print(f"Results saved to {filepath}")
