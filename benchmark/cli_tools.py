@@ -1,9 +1,9 @@
 import argparse
+# metrics used in Lueckmann et al. (2021) - Benchmarking Simulation-Based Inference
 valid_metrics = ["ppc", "mmd", "c2st", "probability_true"]
 
-def run_tool(): # dummy
-    """Placeholder function for the 'run' command."""
-    return "Running the tool..."
+def run_tool(args): # dummy
+    return f"Running the tool with metrics: {', '.join(args)}"
 
 def list_methods(): # dummy
     """Placeholder function for the 'list-methods' command."""
@@ -27,12 +27,13 @@ def help_function(parser):
         help_function(parser)
 
 
-
-
 def handle_command(args):
     # user can either enter valid metrics manually or choose them
-    print("Enter metrics or press Enter to choose interactively")
-    metrics_input = input(args.metrics or "").strip().lower()
+    if args.metrics:
+        metrics_input= args.metrics.strip().lower()
+    else:
+        print("Enter metrics or press Enter to choose interactively")
+        metrics_input = input().strip().lower()
     if metrics_input:
         user_metrics = [m.strip() for m in metrics_input.split(",")]
 
@@ -42,13 +43,13 @@ def handle_command(args):
             print(f"Invalid metrics: {', '.join(invalid)}")
             print(f"Valid metrics are: {', '.join(valid_metrics)}")
         else:
-            print(f"Running the tool with metrics: {', '.join(user_metrics)}")
+            print(run_tool(user_metrics))
     else:
         selected = ask_user_for_metrics()
         if not selected:
             print("No metrics selected.")
         else:
-            print(f"Running the tool with metrics: {', '.join(sorted(selected))}")
+            print(run_tool(selected))
 
 def ask_user_for_metrics():
     # function to choose the metrics
