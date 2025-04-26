@@ -9,14 +9,16 @@ def save_results(metrics, method, task, seed, save_dir="results", file_format="j
     Save benchmark results as JSON or CSV.
 
     Args:
-        metrics (dict): Benchmark metrics as {metric_name (str): score (float or int)}
-                        (e.g.: {"C2ST": 0.84, "runtime_sec": 123.5}, ...).
-        method (str): Inference algorithm name (e.g.: "REJ_ABC", "nNLE", ...).
-        task (str): Benchmark task name (e.g.: "two_moons", "gaussian_linear", ...).
+        metrics (dict): Benchmark metrics as {metric_name (str): score (float or int)},
+            e.g., {"C2ST": 0.84, "runtime_sec": 123.5}.
+        method (str): Inference algorithm name, e.g., "REJ_ABC" or "nNLE".
+        task (str): Benchmark task name, e.g., "two_moons" or "gaussian_linear".
         seed (int): Random seed used.
-        save_dir (str, optional): Output directory (default "results").
-        file_format (str, optional): "json" or "csv" (default "json").
-        **kwargs: Additional metadata to include.
+        save_dir (str or pathlib.Path, optional): Directory in which to save results.
+            Defaults to "results".
+        file_format (str, optional): Output format, either "json" or "csv".
+            Defaults to "json".
+        **kwargs: Additional metadata to include in the saved file.
     """
 
     # --- Input type validation ---
