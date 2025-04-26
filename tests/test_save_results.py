@@ -1,7 +1,7 @@
 import json
 import csv
 import pytest
-from benchmark.save_results import save_results
+from src.benchmark.save_results import save_results
 
 
 def test_json_output(tmp_path):
