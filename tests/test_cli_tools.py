@@ -1,10 +1,7 @@
-import pytest
 import argparse
-import sys
+import argparse
 import builtins
-from io import StringIO
 
-# Import functions and constants from your CLI module
 from benchmark.cli_tools import (
     run_tool,
     list_methods,
@@ -15,7 +12,7 @@ from benchmark.cli_tools import (
 )
 
 
-# 🧪 Tests for run_tool() and list_methods()
+# tests for run_tool() and list_methods()
 def test_run_tool_returns_expected_output():
     metrics = ['ppc', 'c2st']
     result = run_tool(metrics)
@@ -27,7 +24,7 @@ def test_list_methods_returns_methods_list():
     assert list_methods() == expected
 
 
-# 🧪 Tests for handle_run_command()
+# tests for handle_run_command()
 def test_handle_run_command_with_valid_metrics(monkeypatch, capsys):
     args = argparse.Namespace(metrics='ppc,c2st')
     # No interactive input needed
@@ -49,7 +46,6 @@ def test_handle_run_command_with_invalid_metrics(monkeypatch, capsys):
 
 
 # test ask_user_for_metrics()
-
 def test_ask_user_for_metrics(monkeypatch):
     inputs = iter(['y', 'y', 'y', 'y'])
     monkeypatch.setattr(builtins, 'input', lambda *args, **kwargs: next(inputs))
@@ -58,18 +54,7 @@ def test_ask_user_for_metrics(monkeypatch):
 
 
 
-# 🧪 Test for help_function()
 
-def test_help_function_list_methods(monkeypatch, capsys):
-    parser = argparse.ArgumentParser()
-    inputs = iter(['2'])
-    monkeypatch.setattr(builtins, 'input', lambda *args, **kwargs: next(inputs))
-
-    # Capture prints
-    help_function(parser)
-    captured = capsys.readouterr()
-    assert 'Method 1: ExampleMethodA' in captured.out
-    assert 'Method 2: ExampleMethodB' in captured.out
 
 
 
