@@ -1,7 +1,7 @@
 import json
 import csv
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def save_results(metrics, method, task, seed, save_dir="results", file_format="json", **kwargs):
@@ -66,7 +66,7 @@ def save_results(metrics, method, task, seed, save_dir="results", file_format="j
             "method": method,
             "task": task,
             "seed": seed,
-            "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),  # Universal timestamp
+            "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),  # Universal timestamp
             **kwargs,  # Add any extra user-provided metadata
             "metrics": metrics
         }
@@ -80,7 +80,7 @@ def save_results(metrics, method, task, seed, save_dir="results", file_format="j
             "method": method,
             "task": task,
             "seed": seed,
-            "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),  # Universal timestamp
+            "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),  # Universal timestamp
             **kwargs,
             **metrics
         }
