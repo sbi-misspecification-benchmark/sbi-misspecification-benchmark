@@ -1,11 +1,12 @@
 import argparse
+
 # metrics used in Lueckmann et al. (2021) - Benchmarking Simulation-Based Inference
 valid_metrics = ["ppc", "mmd", "c2st", "probability_true"]
 
-def run_tool(args): # dummy
+def run_tool(args):  # dummy
     return f"Running the tool with metrics: {', '.join(args)}"
 
-def list_methods(): # dummy
+def list_methods():  # dummy
     """Placeholder function for the 'list-methods' command."""
     methods = ["Method 1: ExampleMethodA", "Method 2: ExampleMethodB"]
     return "\n".join(methods)
@@ -14,7 +15,7 @@ def help_function(parser):
     # guides the user through the program
     print("CLI for interacting with the sbi-misspecification-benchmark tool.")
     print("Choose one of the following commands: \n  1) run\n  2) list-methods\n  3) help/exit")
-    choice= input("Enter a number ").strip()
+    choice = input("Enter a number ").strip()
     if choice == "1":
         handle_command(argparse.Namespace(metrics=None))
     elif choice == "2":
@@ -26,17 +27,16 @@ def help_function(parser):
         print("Invalid choice.")
         help_function(parser)
 
-
 def handle_command(args):
     # user can either enter valid metrics manually or choose them
     if args.metrics:
-        metrics_input= args.metrics.strip().lower()
+        metrics_input = args.metrics.strip().lower()
     else:
         print("Enter metrics or press Enter to choose interactively")
         metrics_input = input().strip().lower()
+
     if metrics_input:
         user_metrics = [m.strip() for m in metrics_input.split(",")]
-
         invalid = [m for m in user_metrics if m not in valid_metrics]
 
         if invalid:
@@ -53,8 +53,7 @@ def handle_command(args):
 
 def ask_user_for_metrics():
     # function to choose the metrics
-    selected = list()
-
+    selected = []
     print("You can now choose the metrics to be included")
     for metric in valid_metrics:
         answer = input(f"{metric}? (y/n): ").strip().lower()
@@ -79,11 +78,11 @@ def main():
     run_parser = subparsers.add_parser("run", help="Run the tool.")
     run_parser.add_argument(
         "--metrics",
-        type = str,
+        type=str,
     )
+
     # list-methods command
     subparsers.add_parser("list-methods", help="List available methods.")
-
 
     # Parse arguments
     args = parser.parse_args()
@@ -93,8 +92,10 @@ def main():
         handle_command(args)
     elif args.command is None:
         help_function(parser)
-
-
+    elif args.command == "list-methods":
+        print(list_methods())
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main()
