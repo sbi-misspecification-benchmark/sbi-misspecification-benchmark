@@ -26,7 +26,7 @@ def main():
     # Process task
     task = config.get('task')
     if task is not None:
-        task_name = task.get('name', "No task name provided")
+        task_name = task.get('name')
         # Get keys for testing purposes w/o defaults:
         num_simulations = task.get('num_simulations')
         num_observations = task.get('num_observations')
