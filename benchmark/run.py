@@ -28,15 +28,12 @@ def main():
     if task is not None:
         task_name = task.get('name', "No task name provided")
         # Get arguments for testing purposes with defaults:
-        num_simulations = task.get('num_simulations', "Not provided")
-        num_observations = task.get('num_observations', "Not provided")
-        num_posterior_samples = task.get('num_posterior_samples', "Not provided")
+        num_simulations = task.get('num_simulations')
+        num_observations = task.get('num_observations')
+        num_posterior_samples = task.get('num_posterior_samples')
     else:
         task_name = "No task provided"
-        # alternative arguments for testing purposes with defaults:
-        num_simulations = "Not provided"
-        num_observations = "Not provided"
-        num_posterior_samples = "Not provided"
+
 
     print(
         f"Executing task: {task_name}\n"
