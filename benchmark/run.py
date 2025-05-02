@@ -26,7 +26,8 @@ def main():
     # Process task
     task_name = config.get('task.name')
     print(f"Executing task: {task_name}")
-    # Add logic to handle task execution
+    # Add logic to handle task execution => num_simulations, num_observations, num_posterior_samples
+
 
 if __name__ == "__main__":
     main()
