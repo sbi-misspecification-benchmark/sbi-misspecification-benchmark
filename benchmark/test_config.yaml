@@ -1,7 +1,7 @@
 # Test Config for the run.py script
 task:
-name: test_task
-num_simulations: 100
-num_observations: 25
-num_posterior_samples: 50
+  name: test_task
+  num_simulations: 100
+  num_observations: 25
+  num_posterior_samples: 50
 random_seed: 42

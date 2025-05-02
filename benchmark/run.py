@@ -24,13 +24,27 @@ def main():
         print(f"Using provided random seed: {random_seed}")
 
     # Process task
-    task = config.get('task')  
+    task = config.get('task')
     if task is not None:
-        task_name = task.get('name')
+        task_name = task.get('name', "No task name provided")
+        # Get arguments for testing purposes with defaults:
+        num_simulations = task.get('num_simulations', "Not provided")
+        num_observations = task.get('num_observations', "Not provided")
+        num_posterior_samples = task.get('num_posterior_samples', "Not provided")
     else:
-        task_name = None
+        task_name = "No task provided"
+        # alternative arguments for testing purposes with defaults:
+        num_simulations = "Not provided"
+        num_observations = "Not provided"
+        num_posterior_samples = "Not provided"
 
-print(f"Executing task: {task_name}")
+    print(
+        f"Executing task: {task_name}\n"
+        f"num_simulations: {num_simulations}\n"
+        f"num_observations: {num_observations}\n"
+        f"num_posterior_samples: {num_posterior_samples}\n"
+    )
+
     # Add logic to handle task execution => num_simulations, num_observations, num_posterior_samples
 
 
