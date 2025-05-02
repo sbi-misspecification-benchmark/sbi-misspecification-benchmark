@@ -34,7 +34,6 @@ def main():
     else:
         task_name = "No task provided"
 
-
     print(
         f"Executing task: {task_name}\n"
         # printing keys for testing purposes
