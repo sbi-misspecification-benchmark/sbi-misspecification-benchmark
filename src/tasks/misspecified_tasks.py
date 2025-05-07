@@ -9,10 +9,31 @@ def __init__(self, dim=2, device=None):
     self.dim = dim
     self.mu_prior = torch.ones(dim)  # Prior mean is set to 1
     self.sigma_prior = torch.eye(dim)  # Prior covariance is identity
-    self.sigma_likelihood = torch.eye(dim)  # Likelihood covariance is identity
+    self.sigma_likelihood = torch.eye(dim)  # Likelihood covariance is identity matrix
 
     # Create distributions
     self.prior_dist = D.MultivariateNormal(self.mu_prior, self.sigma_prior)
+
+
+def get_mu_prior(self):
+    """Return the prior mean vector."""
+    return self.mu_prior
+
+
+def get_sigma_prior(self):
+    """Return the prior covariance matrix."""
+    return self.sigma_prior
+
+
+def get_sigma_likelihood(self):
+    """Return the likelihood covariance matrix."""
+    return self.sigma_likelihood
+
+
+def get_dim(self):
+    """Return the dimensionality of the distribution."""
+    return self.dim
+
 
 
 def sample_prior(self, num_samples=1):
@@ -79,6 +100,11 @@ def __init__(
     self.prior = self.ground_truth.prior_dist
 
 
+def get_prior(self):
+    """Return the prior distribution."""
+    return self.prior
+
+
 def get_true_parameter(self, idx: int, device: str = "cpu") -> torch.Tensor:
     """Get the true parameter for a given index.
 
@@ -123,7 +149,19 @@ def get_reference_posterior_samples(self, idx: int, device: str = "cpu"):
     return samples.reshape(10_000, self.dim)
 
 
-def forward(self, thetas):
+def simulator(self, thetas):
+    """Simulate observations x given parameters theta under a misspecified likelihood model.
+
+    Args:
+        thetas: - of shape (batch_size, dim)
+                - containing params (vectors) from which observations are simulated
+
+    Returns:
+        torch.Tensor: - of shape (batch_size, dim) 
+                      - containing simulated observations
+                      - each observations corresponds to a input param 
+                      - result models likelihood misspecification by combining samples from different distributions
+    """
     # thetas shape: (batch_size, dim)
     batch_size = thetas.shape[0]
 
@@ -150,6 +188,10 @@ def forward(self, thetas):
     return result
 
 
+def get_simulator(self):
+    """Return simulator function."""
+    return self.simulator
+
 
 
 
@@ -161,4 +203,4 @@ if __name__ == "__main__":
 task = LikelihoodMisspecifiedTask()
 thetas = task.get_true_parameter(0).repeat(num_samples, 1)
 print("True parameters are:", task.get_true_parameter(0))
-print("Observations are:", task.forward(thetas))
+print("Observations are:", task.simulator(thetas))
