@@ -34,12 +34,15 @@ def main():
     else:
         task_name = "No task provided"
 
+    method = config.get('method')
+
     print(
         f"Executing task: {task_name}\n"
         # printing keys for testing purposes
         f"num_simulations: {num_simulations}\n"
         f"num_observations: {num_observations}\n"
         f"num_posterior_samples: {num_posterior_samples}\n"
+        f"method: {method}"
     )
 
     # Add logic to handle task execution => num_simulations, num_observations, num_posterior_samples
