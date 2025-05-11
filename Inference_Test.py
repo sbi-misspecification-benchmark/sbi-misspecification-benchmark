@@ -1,10 +1,15 @@
+# This script didn't run for me if I didnt set the KMP_DUPLICATE_LIB_OK environment variable
+# import os
+# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+
 import torch
 from sbi.inference import NPE
 from Run_Inference import run_inference
-from Base_Task import BaseTask
+#from Base_Task import BaseTask
 
 
-class DummyTask(BaseTask):
+class DummyTask():
     def get_prior(self):
         return torch.distributions.MultivariateNormal(
             loc=torch.zeros(2), covariance_matrix=torch.eye(2)
@@ -18,13 +23,11 @@ class DummyTask(BaseTask):
 
 def test_run_inference():
     task = DummyTask()
-    samples = run_inference(task, method_class= NPE, num_simulations=200)
+    print("Im finished")
+    for method_name in ["NPE", "NLE", "NRE"]:
+        samples = run_inference(task, method_name=method_name, num_simulations=200)
 
-    assert isinstance(samples, torch.Tensor)
-    assert samples.shape == (1000, 2)
-
-
-
-
+        assert isinstance(samples, torch.Tensor)
+        assert samples.shape == (1000, 2)
 
 
