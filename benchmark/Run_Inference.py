@@ -1,5 +1,6 @@
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+# This script didn't run for me if I didnt set the KMP_DUPLICATE_LIB_OK environment variable
+# import os
+# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 import torch
 from sbi.inference import NPE, NLE, NRE
@@ -19,6 +20,10 @@ def run_inference(task, method_name, num_simulations):
     
     prior = task.get_prior()
     simulator = task.get_simulator()
+
+## For testing purposes, we can use a fixed seed
+#   torch.manual_seed(0)
+ 
 # draw parameters from prior
     θ = prior.sample((num_simulations,))
 
