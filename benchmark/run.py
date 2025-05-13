@@ -24,15 +24,11 @@ def main():
         print(f"Using provided random seed: {random_seed}")
 
     # Process task
-    task = config.get('task')
-    if task is not None:
-        task_name = task.get('name')
-        # Get keys for testing purposes w/o defaults:
-        num_simulations = task.get('num_simulations')
-        num_observations = task.get('num_observations')
-        num_posterior_samples = task.get('num_posterior_samples')
-    else:
-        task_name = "No task provided"
+    task = config.get('task', {})
+    task_name = task.get('name', "Default Task Name")
+    num_simulations = task.get('num_simulations', 100)
+    num_observations = task.get('num_observations', 10)
+    num_posterior_samples = task.get('num_posterior_samples', 50)
 
     method = config.get('method')
 
