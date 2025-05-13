@@ -26,9 +26,9 @@ def main():
     # Process task
     task = config.get('task', {})
     task_name = task.get('name', "Default Task Name")
-    num_simulations = task.get('num_simulations', 100)
-    num_observations = task.get('num_observations', 10)
-    num_posterior_samples = task.get('num_posterior_samples', 50)
+    num_simulations = task.get('num_simulations', 100)  # Defaults to 100 simulations
+    num_observations = task.get('num_observations', 10)  # Defaults to 10 observations
+    num_posterior_samples = task.get('num_posterior_samples', 50) # Defaults to 50 posterior samples
 
     method = config.get('method')
 
