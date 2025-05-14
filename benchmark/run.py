@@ -67,7 +67,7 @@ def main():
     # Add logic to handle task execution => num_simulations, num_observations, num_posterior_samples
     # Placeholder for task execution
     # For now, we simulate task execution using the dummy simulator
-    
+
     # Instantiate the task
     task_class = task_registry[task_name]
     task_instance = task_class()
