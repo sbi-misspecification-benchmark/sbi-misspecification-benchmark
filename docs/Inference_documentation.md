@@ -25,7 +25,7 @@ The function is modular and supports multiple inference algorithms.
 | ------------------------- | ------------------------------------------------------------------------------- |
 | 1. Get Prior              | Calls `task.get_prior()` to access the prior distribution over parameters       |
 | 2. Get Simulator          | Uses `task.get_simulator()` to define how to generate `x` from `θ`              |
-| 3. Simulate Training Data | Draws many `(\u03b8, x)` pairs by sampling from prior and running the simulator |
+| 3. Simulate Training Data | Draws `(θ, x)` pairs by sampling from prior and running the simulator |
 | 4. Train Inference        | Uses `sbi` inference method (e.g. NPE) to learn a posterior approximation       |
 | 5. Posterior Sampling     | Uses the trained posterior to generate new samples given an observation         |
 
@@ -33,8 +33,8 @@ The function is modular and supports multiple inference algorithms.
 
 ## Class: `DummyTask`
 
-A simple, mock task used for testing.
-Simulates a very basic Bayesian model with no true misspecification.
+A mock task used for testing.
+Simulates a very basic Bayesian model without misspecification.
 
 ---
 
