@@ -23,7 +23,7 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip 
         pip install -r requirements.txt
         
     - name: Run Tests with Coverage
@@ -41,3 +41,4 @@ jobs:
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F7,F82 --show-source --statistics
+
