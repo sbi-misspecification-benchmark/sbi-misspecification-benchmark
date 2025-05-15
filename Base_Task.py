@@ -1,15 +1,22 @@
 from abc import ABC
 
 class BaseTask(ABC):
-# return the prior distribution over parameters θ
+    """Base class for SBI task that defines the required interface."""
+
     def get_prior(self):
+        """return the prior distribution over parameters θ"""
         raise NotImplementedError("Task must implement get_prior method")
 
-# return a simulator(function) that maps θ → x
-    def simulator(self):
+    def simulator(self, theta):
+        """Simulate x given theta"""
         raise NotImplementedError("Task must implement simulator method")
 
-# return an observation x for a given index
-    def get_observation(self, idx: int):
-        raise NotImplementedError("Task must implement get_observation method")
 
+    def get_simulator(self):
+        """return a simulator(function)"""
+        return self.simulator
+
+
+    def get_observation(self, idx: int):
+        """return an observation x for a given index"""
+        raise NotImplementedError("Task must implement get_observation method")
