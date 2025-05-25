@@ -66,13 +66,13 @@ def main():
     )
 
 
-    # Call the actual inference run
+    # Call inference run and parse num_posterior_samples
     samples = run_inference(
         task_instance,
         method,
         num_simulations,
         seed=random_seed,
-        num_posterior_samples=num_posterior_samples
+        num_posterior_samples = num_posterior_samples
     )
     print(f"Generated {len(samples)} posterior samples.")
     # For now, we simulate task execution using the dummy simulator
