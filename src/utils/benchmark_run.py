@@ -65,6 +65,7 @@ def main():
         f"method: {method}"
     )
 
+    # Instantiate the task
     task_class = task_registry[task_name]
     task_instance = task_class()
     # Call inference run and parse num_posterior_samples
@@ -77,10 +78,6 @@ def main():
     )
     print(f"Generated {len(samples)} posterior samples.")
     # For now, we simulate task execution using the dummy simulator
-
-    # Instantiate the task
-    task_class = task_registry[task_name]
-    task_instance = task_class()
 
     # Placeholder for thetas
     thetas = "misspecified_model_parameters"
