@@ -2,7 +2,7 @@ import argparse
 import argparse
 import builtins
 
-from benchmark.cli_tools import (
+from src.utils.cli_tools import (
     run_tool,
     list_methods,
     help_function,
