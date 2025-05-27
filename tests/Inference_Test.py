@@ -5,7 +5,7 @@
 
 import torch
 from sbi.inference import NPE
-from Run_Inference import run_inference
+from src.inference.Run_Inference import run_inference
 #from Base_Task import BaseTask
 
 
