@@ -12,7 +12,7 @@ methods = {
     "NRE": NRE,
 }
 
-def run_inference(task, method_name, num_simulations, seed = None):
+def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples=50):
     """Run simulation-based inference on a given task using the specified method.
     Returns samples from the posterior conditioned on the true observation"""
     if method_name not in methods:
@@ -39,6 +39,6 @@ def run_inference(task, method_name, num_simulations, seed = None):
 # perform inference
     posterior = inference.build_posterior(density_estimator)
     x_o = task.get_observation(idx=0)
-    samples = posterior.sample((1000,), x=x_o)
+    samples = posterior.sample((num_posterior_samples,), x=x_o)
 
     return samples

@@ -1,6 +1,7 @@
 import argparse
 import yaml
 import random
+from src.inference.Run_Inference import run_inference
 
 # Define a dummy task class
 class DummyTask:
@@ -64,13 +65,19 @@ def main():
         f"method: {method}"
     )
 
-    # Add logic to handle task execution => num_simulations, num_observations, num_posterior_samples
-    # Placeholder for task execution
-    # For now, we simulate task execution using the dummy simulator
-
     # Instantiate the task
     task_class = task_registry[task_name]
     task_instance = task_class()
+    # Call inference run and parse num_posterior_samples
+    samples = run_inference(
+        task_instance,
+        method,
+        num_simulations,
+        seed=random_seed,
+        num_posterior_samples=num_posterior_samples
+    )
+    print(f"Generated {len(samples)} posterior samples.")
+    # For now, we simulate task execution using the dummy simulator
 
     # Placeholder for thetas
     thetas = "misspecified_model_parameters"
