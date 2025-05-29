@@ -12,7 +12,7 @@ config = {
     "task": {
         "name": "DummyTask",
         "num_simulations": 10,
-        "num_observations": 2,
+        "num_observations": 3,
         "num_posterior_samples": 20
     },
     "random_seed": 123
@@ -43,6 +43,8 @@ def test_run_inference():
         seed=42,
         train_only=True
     )
+
+    assert posterior is not None, "Posterior is None — training failed"
 
     # Loop over observations, as in the runner
     for idx in range(num_obs):

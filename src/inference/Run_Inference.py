@@ -32,13 +32,16 @@ def run_inference(
 
     if train_only:
         # TRAINING PHASE (run only once)
+        print("Training model...")
         prior = task.get_prior()
         simulator = task.get_simulator()
         theta = prior.sample((num_simulations,))
         x = simulator(theta)
+        print(f"Simulated theta shape: {theta.shape}, x shape: {x.shape}")
         inference = methods[method_name](prior)
         density_estimator = inference.append_simulations(theta, x).train()
         posterior = inference.build_posterior(density_estimator)
+        print(f"Posterior built: {posterior}")
         return density_estimator, posterior
 
     else:
