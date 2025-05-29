@@ -42,3 +42,9 @@ jobs:
       run: |
         flake8 . --count --select=E9,F7,F82 --show-source --statistics
 
+
+    - name: Clean cache
+      run: |
+        find . -type d -name '__pycache__' -exec rm -r {} +
+        rm -rf .pytest_cache
+        
