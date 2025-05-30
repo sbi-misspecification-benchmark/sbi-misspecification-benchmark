@@ -8,10 +8,6 @@ class DummyTask:
     def simulator(self, thetas):
         print(f"Running DummyTask simulator with thetas: {thetas}")
 
-    # Dummy implementation for testing
-    def get_observation(self, idx=0):
-        return f"observation_{idx}"
-
 # Task registry to hold all available task classes
 task_registry = {
     "test_task": DummyTask
@@ -72,37 +68,25 @@ def main():
     # Instantiate the task
     task_class = task_registry[task_name]
     task_instance = task_class()
-
-    # Train model once
-    trained_density_estimator, posterior = run_inference(
-        task=task_instance,
-        method_name=method,
-        num_simulations=num_simulations,
-        seed=random_seed,
-        train_only=True
+    # Call inference run and parse num_posterior_samples
+    samples = run_inference(
+        task = task_instance,
+        method_name = method,
+        num_simulations = num_simulations,
+        seed = random_seed,
+        num_posterior_samples = num_posterior_samples, 
+        num_observations = num_observations,
+        config = config
     )
-
-    # Loop over all observations
-    for idx in range(num_observations):
-        x_obs = task_instance.get_observation(idx)
-        samples = run_inference(
-            task=task_instance,
-            method_name=method,
-            num_simulations=num_simulations,
-            seed=random_seed,
-            num_posterior_samples=num_posterior_samples,
-            x_obs=x_obs,
-            trained_density_estimator=trained_density_estimator,
-            posterior=posterior,
-            config=config,
-            obs_idx=idx,
-            train_only=False
-        )
-        print(f"Observation {idx}: Generated {len(samples)} posterior samples.")
-
+    print(f"Generated {len(samples)} posterior samples.")
     # For now, we simulate task execution using the dummy simulator
+
+    # Placeholder for thetas
     thetas = "misspecified_model_parameters"
+
+    # Simulate the task
     task_instance.simulator(thetas)
+
 
 if __name__ == "__main__":
     main()
