@@ -70,11 +70,13 @@ def main():
     task_instance = task_class()
     # Call inference run and parse num_posterior_samples
     samples = run_inference(
-        task_instance,
-        method,
-        num_simulations,
-        seed=random_seed,
-        num_posterior_samples=num_posterior_samples
+        task = task_instance,
+        method_name = method,
+        num_simulations = num_simulations,
+        seed = random_seed,
+        num_posterior_samples = num_posterior_samples, 
+        num_observations = num_observations,
+        config = config
     )
     print(f"Generated {len(samples)} posterior samples.")
     # For now, we simulate task execution using the dummy simulator
