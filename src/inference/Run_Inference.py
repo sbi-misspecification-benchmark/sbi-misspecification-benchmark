@@ -4,6 +4,8 @@
 
 import torch
 from sbi.inference import NPE, NLE, NRE
+from src.utils.io_utils import save_samples
+from src.utils.io_utils import save_reference_samples
 
 # List of inference methods
 methods = {
@@ -39,6 +41,16 @@ def run_inference(task, method_name, num_simulations, seed=None, num_posterior_s
 # perform inference
     posterior = inference.build_posterior(density_estimator)
     x_o = task.get_observation(idx=0)
-    samples = posterior.sample((num_posterior_samples,), x=x_o)
+    posterior_samples = posterior.sample((num_posterior_samples,), x=x_o)
 
-    return samples
+    # Save all necessary data
+    task_name = task.__class__.__name__
+    save_samples(posterior_samples, task_name=task_name, method_name=method_name)
+    torch.save(x_o, f"outputs/{task_name}/{method_name}/observation.pt")
+
+    ref_samples = task.get_reference_posterior_samples(idx=0)
+    torch.save(ref_samples, f"outputs/{task_name}/{method_name}/reference_samples.pt")
+
+    return posterior_samples
+
+
