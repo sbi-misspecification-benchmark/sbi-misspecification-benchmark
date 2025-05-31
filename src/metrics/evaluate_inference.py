@@ -1,0 +1,51 @@
+import os
+import torch
+import pandas as pd
+from src.utils.io_utils import load_tensor, save_file
+from .c2st import compute_c2st
+from .ppc import compute_ppc
+
+
+def evaluate_inference(task, method_name, metric_name ):
+    """
+    Evaluate how well a chosen inference method estimate the true posterior
+
+    Args:
+        task: an object that implements Base_Task interface and comes with the following
+              - the true observation
+               - the reference posterior based on the observation
+        method_name(str): name of the chosen inference method (e.g. NPE) to load the right data
+        metric_name: the name of the metric used for evaluation (e.g. c2st)
+
+    Returns:
+        float: the computed score of the metric and saves it as CSV file.
+    """
+    task_name = task.__class__.__name__
+    posterior_samples = load_tensor(task_name, method_name, "posterior_samples")
+    observation = load_tensor(task_name, method_name, "observation")
+    reference_samples = load_tensor(task_name, method_name, "reference_samples")
+    if metric_name == "c2st":
+        score = compute_c2st(
+            posterior_samples,
+            reference_samples,
+            # uses 30% of the data for testing
+            test_size=0.3,
+            random_state=86
+        )
+
+    elif metric_name == "ppc":
+        simulator = task.get_simulator()
+        score = compute_ppc(posterior_samples, observation, simulator)
+
+    df = pd.DataFrame([{
+        "task": task_name,
+        "method": method_name,
+        "metric": metric_name,
+        "score": score
+    }])
+    save_file(task_name, method_name, "metrics.csv", df)
+
+
+    print(f"{metric_name.upper()} for {task_name}/{method_name}: {score:.3f}")
+    return score
+
