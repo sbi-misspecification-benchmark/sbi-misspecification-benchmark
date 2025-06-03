@@ -15,8 +15,24 @@ methods = {
 }
 
 def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples = 50, num_observations = 10, config = None):
-    """Run simulation-based inference on a given task using the specified method.
-    Returns samples from the posterior conditioned on the true observation"""
+    """
+    Run simulation-based inference on a given task using the specified method.
+
+    Args:
+        task: The task object providing prior, simulator, and observation interface.
+        method_name: The inference method to use ("NPE", "NLE", or "NRE").
+        num_simulations: Number of simulations for training.
+        seed: Random seed for reproducibility.
+        num_posterior_samples: Number of posterior samples to generate per observation.
+        num_observations: Number of observations to loop over.
+        config: (optional) Configuration dictionary.
+            NOTE: This parameter is used **solely for saving the configuration** to disk (e.g., as 'config_used.yaml').
+            It is **not** used for extracting values such as `task`, `method_name`, or `num_observations`.
+            All required arguments must be passed explicitly.
+
+    Returns:
+        samples: Posterior samples from the last observation.
+    """
     if method_name not in methods:
         raise ValueError(f"Method {method_name} is not supported. Choose from {list(methods.keys())}.")
     
