@@ -28,7 +28,7 @@ def test_json_output(tmp_path):
     assert data["seed"] == seed
     # timestamp present and ISO-format
     assert isinstance(data["timestamp"], str) and "T" in data["timestamp"]
-    assert data["metrics"] == metrics
+    assert data["evaluation"] == metrics
 
 
 def test_csv_output(tmp_path):

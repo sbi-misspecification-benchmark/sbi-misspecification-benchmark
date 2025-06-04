@@ -1,9 +1,7 @@
-import os
-import torch
 import pandas as pd
 from src.utils.io_utils import load_tensor, save_file
-from .c2st import compute_c2st
-from .ppc import compute_ppc
+from src.evaluation.metrics.c2st import compute_c2st
+from src.evaluation.metrics.ppc import compute_ppc
 
 
 def evaluate_inference(task, method_name, metric_name ):
@@ -15,7 +13,7 @@ def evaluate_inference(task, method_name, metric_name ):
               - the true observation
                - the reference posterior based on the observation
         method_name(str): name of the chosen inference method (e.g. NPE) to load the right data
-        metric_name: the name of the metric used for evaluation (e.g. c2st)
+        metric_name: the name of the metric used for evaluation.py (e.g. c2st)
 
     Returns:
         float: the computed score of the metric and saves it as CSV file.
@@ -43,9 +41,11 @@ def evaluate_inference(task, method_name, metric_name ):
         "metric": metric_name,
         "score": score
     }])
-    save_file(task_name, method_name, "metrics.csv", df)
+    save_file(task_name, method_name, "evaluation.csv", df)
 
 
     print(f"{metric_name.upper()} for {task_name}/{method_name}: {score:.3f}")
     return score
+
+
 

@@ -16,7 +16,7 @@ def save_reference_samples(tensor, task_name, seed):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     torch.save(tensor, path)
 
-# loads a tensor to be used for evaluation
+# loads a tensor to be used for evaluation.py
 def load_tensor(task_name, method_name, name):
     return torch.load(f"outputs/{task_name}/{method_name}/{name}.pt")
 

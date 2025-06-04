@@ -3,9 +3,9 @@ import torch
 
 from Base_Task import BaseTask
 from src.inference.Run_Inference import run_inference
-from src.metrics.c2st import compute_c2st
-from src.metrics.ppc import compute_ppc
-from src.metrics.evaluate_inference import evaluate_inference
+from src.evaluation.metrics.c2st import compute_c2st
+from src.evaluation.metrics.ppc import compute_ppc
+from src.evaluation.evaluate_inference import evaluate_inference
 
 
 class DummyTask(BaseTask):
@@ -94,3 +94,4 @@ def test_run_inference_and_evaluate():
     # Checks if score is a float
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
+
