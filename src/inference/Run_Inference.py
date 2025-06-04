@@ -76,3 +76,4 @@ def run_inference(task, method_name, num_simulations, seed=None, num_posterior_s
             with open(os.path.join(output_dir, "config_used.yaml"), "w") as f:
                 yaml.dump(config, f)
 
+    return samples
