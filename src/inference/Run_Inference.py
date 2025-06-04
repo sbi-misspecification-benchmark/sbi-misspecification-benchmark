@@ -15,8 +15,8 @@ methods = {
 }
 
 
-def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples=50, num_observations=10,
-                  config=None):
+def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples = 50, num_observations = 10, config = None):
+
     """
     Run simulation-based inference on a given task using the specified method.
 
@@ -58,6 +58,7 @@ def run_inference(task, method_name, num_simulations, seed=None, num_posterior_s
 
     # perform inference
     posterior = inference.build_posterior(density_estimator)
+
 
     task_name = task.__class__.__name__  # get task name
 
