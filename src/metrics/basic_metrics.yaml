@@ -1,9 +1,0 @@
-  import numpy as np
-
-  def c2st_metric(samples, ground_truth):
-    # Placeholder: Classifier Two-Sample Test, returns random value
-    return np.random.uniform(0, 1)
-
-  def ppc_metric(samples, observation):
-    # Placeholder: Posterior Predictive Check, returns random value
-    return np.random.uniform(0, 1)
