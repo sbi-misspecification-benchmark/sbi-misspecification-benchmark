@@ -35,15 +35,15 @@ def run_inference(task, method_name, num_simulations, seed=None, num_posterior_s
     """
     if method_name not in methods:
         raise ValueError(f"Method {method_name} is not supported. Choose from {list(methods.keys())}.")
-    
+
     method_class = methods[method_name]
-    
+
     prior = task.get_prior()
     simulator = task.get_simulator()
 
     if seed is not None:
         torch.manual_seed(seed)
- 
+
     # draw parameters from prior
     theta = prior.sample((num_simulations,))
 
