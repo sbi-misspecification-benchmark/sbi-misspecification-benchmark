@@ -1,0 +1,5 @@
+defaults:
+- task: misspecified_likelihood
+- inference: npe
+- metrics: basic
+random_seed: 42
