@@ -76,7 +76,7 @@ def save_results(
             "seed": seed,
             "timestamp": timestamp,
             **kwargs,
-            "evaluation": results,
+            "metrics": results,
         }
         with open(filepath, "w") as f:
             json.dump(output, f, indent=4)
