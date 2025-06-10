@@ -57,9 +57,12 @@ def test_observation_reproducibility():
 def test_posterior_changes_with_observation():
     # Checks that different observations lead to different posteriors
     task = LinearGaussianTask(seed=42)
-    obs1 = task.get_observation(idx=1)
-    obs2 = task.get_observation(idx=2)
 
-    samples1 = task.get_reference_posterior_samples(0)
-    samples2 = task.get_reference_posterior_samples(1)
-    assert not torch.allclose(samples1.mean(dim=0), samples2.mean(dim=0))
+    obs0 = task.get_observation(0)
+    samples0 = task.get_reference_posterior_samples(0)
+
+    obs1 = task.get_observation(1)
+    samples1 = task.get_reference_posterior_samples(1)
+
+    assert not torch.allclose(obs0, obs1)
+    assert not torch.allclose(samples0.mean(0), samples1.mean(0))
