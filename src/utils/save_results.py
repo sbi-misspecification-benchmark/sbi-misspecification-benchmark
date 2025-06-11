@@ -1,98 +1,109 @@
-import json
 import csv
 from pathlib import Path
 from datetime import datetime
+from typing import Any, Optional
 
 
 def save_results(
-    results,
-    method,
-    task,
-    seed,
-    save_dir="results",
-    file_format="json",
-    **kwargs,
-):
+    results: dict[str, float],
+    method: str,
+    task: str,
+    num_simulations: int,
+    observation_idx: int,
+    seed: int,
+    save_dir: str = "results",
+    filename: Optional[str] = None,
+    **kwargs: dict[str, Any],
+) -> None:
     """
-    Save benchmark results as JSON or CSV.
+    Save benchmark results as a CSV file (one row per metric).
+
+    If a filename is provided, results are appended if the file exists, or written to a new file otherwise.
+    If no filename is provided, a unique filename is generated based on benchmark parameters.
 
     Args:
-        results (dict): Benchmark results as {metric_name (str): score (float or int)}
-                        (e.g.: {"C2ST": 0.84, "runtime_sec": 123.5}, ...).
-        method (str): Inference algorithm name (e.g.: "REJ_ABC", "nNLE", ...).
-        task (str): Benchmark task name (e.g.: "two_moons", "gaussian_linear", ...).
+        results (dict): Benchmark results as {metric_name (str): value (float or int)}
+            (e.g.: {"C2ST": 0.84, "runtime_sec": 123.5}).
+        method (str): Inference algorithm name (e.g.: "REJ_ABC", "nNLE").
+        task (str): Benchmark task name (e.g.: "two_moons", "gaussian_linear").
+        num_simulations (int): Number of simulations.
+        observation_idx (int): Index of observation.
         seed (int): Random seed used.
-        save_dir (str, optional): Output directory (default "results").
-        file_format (str, optional): "json" or "csv" (default "json").
+        save_dir (str, optional): Directory to save the file (default: "results").
+        filename (str, optional): CSV filename (default: None).
+            If None, a unique CSV filename is generated.
+
         **kwargs: Additional metadata to include.
     """
 
-    # --- Input type validation ---
-    if not isinstance(method, str):
-        raise TypeError(f"Expected 'method' to be str, got {type(method).__name__}")
-    if not isinstance(task, str):
-        raise TypeError(f"Expected 'task' to be str, got {type(task).__name__}")
-    if not isinstance(seed, int):
-        raise TypeError(f"Expected 'seed' to be int, got {type(seed).__name__}")
-    if not isinstance(save_dir, (str, Path)):
-        raise TypeError(
-            f"Expected 'save_dir' to be a str or Path, got {type(save_dir).__name__}"
-        )
-    if not isinstance(file_format, str):
-        raise TypeError(
-            f"Expected 'file_format' to be str, got {type(file_format).__name__}"
-        )
+    # Create the save directory if it doesn't exist
+    save_path = Path(save_dir)
+    save_path.mkdir(parents=True, exist_ok=True)
 
-    file_format = file_format.lower()  # allow "JSON", "Csv", etc.
-    if file_format not in {"json", "csv"}:
-        raise ValueError(f"Unsupported file format: {file_format}. Use 'json' or 'csv'.")
+    # Determine filepath and write mode
+    if filename is None:
+        # Auto-Generating a unique filename based on the used benchmark parameters
+        base = f"{task}__{method}__seed{seed}__obs{observation_idx}"
+        filepath = save_path / f"{base}.csv"
 
-    # --- Prepare save location and filename ---
-    save_dir = Path(save_dir)
-    save_dir.mkdir(parents=True, exist_ok=True)
+        # Add run suffix if needed
+        if filepath.exists():
+            run_id = 1
+            while True:
+                new_filename = f"{base}__{run_id}.csv"
+                filepath = save_path / new_filename
+                if not filepath.exists():
+                    break
+                run_id += 1
 
-    base = f"{method}__{task}__seed{seed}"
-    filename = f"{base}.{file_format}"
-    filepath = save_dir / filename
+        write_mode = "w"
+        write_header = True
 
-    # if this exact filename exists, append __runN
-    if filepath.exists():
-        run_id = 1
-        while True:
-            filename = f"{base}__run{run_id}.{file_format}"
-            filepath = save_dir / filename
-            if not filepath.exists():
-                break
-            run_id += 1
+    else:
+        # Use given filename, and append if it already exists
+        filepath = save_path / filename
+        file_exists = filepath.exists()
+        write_mode = "a" if file_exists else "w"
+        write_header = not file_exists
 
-    # universal timestamp
+    # Generate ISO-formatted timestamp (UTC)
     timestamp = datetime.utcnow().replace(microsecond=0).isoformat()
 
-    # --- Write out ---
-    if file_format == "json":
-        output = {
-            "method": method,
-            "task": task,
-            "seed": seed,
-            "timestamp": timestamp,
-            **kwargs,
-            "metrics": results,
-        }
-        with open(filepath, "w") as f:
-            json.dump(output, f, indent=4)
-
-    else:  # csv
+    # Create a row for each metric
+    rows = []
+    for metric_name, value in results.items():
         row = {
             "method": method,
             "task": task,
             "seed": seed,
+            "num_simulations": num_simulations,
+            "observation_idx": observation_idx,
+            "metric": metric_name,
+            "value": value,
             "timestamp": timestamp,
-            **kwargs,
-            **results,
+            **kwargs
         }
-        with open(filepath, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
-            writer.writeheader()
-            writer.writerow(row)
+        rows.append(row)
 
-    print(f"Results saved to {filepath.resolve()}")
+    # Validate header if appending to an existing file
+    if write_mode == "a":
+        with open(filepath, "r", newline="") as f:
+            reader = csv.reader(f)
+            existing_header = next(reader)
+        current_header = list(rows[0].keys())
+        if set(existing_header) != set(current_header):
+            raise ValueError(
+                f"Header mismatch when appending to '{filepath}':\n"
+                f"Expected columns: {existing_header}\n"
+                f"Given: {current_header}"
+            )
+
+    # Append or create the CSV file
+    with open(filepath, write_mode, newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
+
+    # Confirm the file was saved
+    print(f"Saved {len(rows)} metric(s) to {filepath.resolve()}")
