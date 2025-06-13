@@ -1,0 +1,4 @@
+defaults:
+- task: misspecified_likelihood
+- inference: npe
+random_seed: 42
