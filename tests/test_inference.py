@@ -20,6 +20,9 @@ class DummyTask():
     def get_observation(self, idx= 0):
         return torch.tensor([0.5, 0.5])
 
+    def get_reference_posterior_samples(self, idx):
+        return torch.ones(100, 2)  # Fake samples
+
 
 def test_run_inference():
     task = DummyTask()
