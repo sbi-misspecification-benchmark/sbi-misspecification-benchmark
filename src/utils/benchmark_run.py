@@ -5,6 +5,7 @@ import os
 import csv
 
 from src.inference.Run_Inference import run_inference
+from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
 # ---- Example metric functions ----
 # Replace these with your real implementations!
@@ -30,7 +31,8 @@ class DummyTask:
 
 # Task registry to hold all available task classes
 task_registry = {
-    "test_task": DummyTask
+    "test_task": DummyTask,
+    "misspecified_likelihood": LikelihoodMisspecifiedTask,
 }
 
 def load_config(file_path):
