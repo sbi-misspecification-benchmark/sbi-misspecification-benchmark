@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Mapping, Literal
 
 from .file_utils import ensure_directory, resolve_write_mode, unique_path
-from .csv_utils import assert_csv_headers_matches
+from .csv_utils import assert_csv_header_matches
 
 # Default CSV schema
 FIELDNAMES = [
@@ -38,7 +38,7 @@ def save_results(
         observation_idx (int): Index of observation.
         directory (str, optional): Directory to save the file. Defaults to "outputs/results".
         filename (str, optional): CSV filename.
-            If None, a unique name within the given directory is generated based of method and task name.
+            If None, a unique name within the given directory is generated based on method and task name.
         file_mode ("write" or "append", optional): 'write' to overwrite;
             'append' to append or create if the file does not exist.
             Defaults to "append".
@@ -92,7 +92,7 @@ def save_results(
 
     # Assert that the headers match when appending to an existing CSV file
     if file_mode == "append" and path.exists():
-        assert_csv_headers_matches(path, FIELDNAMES)
+        assert_csv_header_matches(path, FIELDNAMES)
 
     # Write or append to the CSV
     with path.open(mode, newline="", encoding=encoding) as f:

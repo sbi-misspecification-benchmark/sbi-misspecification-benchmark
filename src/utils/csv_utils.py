@@ -23,7 +23,7 @@ def get_csv_header(path: Path) -> List[str]:
             raise ValueError(f"{path} is empty. No header found")
 
 
-def assert_csv_headers_matches(path: Path, expected_header: Sequence[str]) -> None:
+def assert_csv_header_matches(path: Path, expected_header: Sequence[str]) -> None:
     """
     Check whether a CSV file's header matches an expected header sequence.
 
@@ -65,7 +65,7 @@ def merge_csv_rows(
     rows: List[Mapping[str, Any]] = []
     for csv_path in sorted(folder.glob(pattern)):
         if expected_header is not None:
-            assert_csv_headers_matches(csv_path, expected_header)
+            assert_csv_header_matches(csv_path, expected_header)
         with csv_path.open(newline="") as f:
             reader = csv.DictReader(f)
             for row in reader:

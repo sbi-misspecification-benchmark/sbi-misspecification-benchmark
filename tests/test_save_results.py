@@ -1,99 +1,152 @@
-import json
 import csv
 import pytest
+from pathlib import Path
 
-from src.utils.save_rslt import save_results
-
-
-def test_json_output(tmp_path):
-    metrics = {"test_metric_a1": 1.23, "test_metric_b1": 4}
-    method = "test_method1"
-    task = "test_task1"
-    seed = 0
-    save_dir = tmp_path / "results"
-
-    # Write JSON
-    save_results(metrics, method, task, seed, save_dir=save_dir, file_format="json")
-    file_path = save_dir / f"{method}__{task}__seed{seed}.json"
-
-    # File should exist
-    assert file_path.exists()
-
-    # Load and verify contents
-    with open(file_path, "r") as f:
-        data = json.load(f)
-
-    assert data["method"] == method
-    assert data["task"] == task
-    assert data["seed"] == seed
-    # timestamp present and ISO-format
-    assert isinstance(data["timestamp"], str) and "T" in data["timestamp"]
-    assert data["metrics"] == metrics
+from src.utils.save_results import save_results
 
 
-def test_csv_output(tmp_path):
-    metrics = {"test_metric_a2": 1.0, "test_metric_b2": 0.5}
-    method = "test_method2"
-    task = "test_task2"
-    seed = 1
-    save_dir = tmp_path / "results"
-
-    # Write CSV
-    save_results(metrics, method, task, seed, save_dir=save_dir, file_format="csv")
-    file_path = save_dir / f"{method}__{task}__seed{seed}.csv"
-
-    # File should exist
-    assert file_path.exists()
-
-    # Read back with DictReader
-    with open(file_path, newline="") as f:
-        reader = csv.DictReader(f)
-        row = next(reader)
-
-    assert row["method"] == method
-    assert row["task"] == task
-    assert int(row["seed"]) == seed
-    # Metrics come back as strings; convert to float
-    assert abs(float(row["test_metric_a2"]) - metrics["test_metric_a2"]) < 1e-8
-    assert abs(float(row["test_metric_b2"]) - metrics["test_metric_b2"]) < 1e-8
+def read_csv(path: Path):
+    with path.open(newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
 
 
-def test_run_id_generation(tmp_path):
-    metrics = {"test_metric_a3": 22.5, "test_metric_b3": 12.1}
-    method = "test_method3"
-    task = "test_task3"
-    seed = 2
-    save_dir = tmp_path / "results"
-
-    # First call writes base filename
-    save_results(metrics, method, task, seed, save_dir=save_dir, file_format="json")
-    base = save_dir / f"{method}__{task}__seed{seed}.json"
-    assert base.exists()
-
-    # Second call causes __run1
-    save_results(metrics, method, task, seed, save_dir=save_dir, file_format="json")
-    run1 = save_dir / f"{method}__{task}__seed{seed}__run1.json"
-    assert run1.exists()
-
-    # Third call causes __run2
-    save_results(metrics, method, task, seed, save_dir=save_dir, file_format="json")
-    run2 = save_dir / f"{method}__{task}__seed{seed}__run2.json"
-    assert run2.exists()
+def test_auto_generated_filename(tmp_path):
+    """
+    When filename is None, an auto-generated name based on method and task should be used.
+    """
+    results = {"m1": 1.0}
+    path = save_results(
+        results,
+        method="method",
+        task="task",
+        num_simulations=1,
+        observation_idx=0,
+        save_directory=tmp_path,
+        filename=None
+    )
+    assert path.parent == tmp_path
+    assert path.suffix == ".csv"
+    assert path.name.startswith("method__task")  # Name must start with 'method__task'
 
 
-def test_input_validation(tmp_path):
-    # method must be str
-    with pytest.raises(TypeError):
-        save_results({}, 123, "t", 0, save_dir=tmp_path)
+def test_explicit_filename_without_collision(tmp_path):
+    """
+    When a filename is provided, it should be used with .csv appended. No suffixing.
+    """
+    results = {"a": 2.0}
+    path = save_results(
+        results,
+        method="X",
+        task="Y",
+        num_simulations=1,
+        observation_idx=1,
+        save_directory=tmp_path,
+        filename="report",
+        file_mode="append"
+    )
+    assert path.name == "report.csv"
 
-    # task must be str
-    with pytest.raises(TypeError):
-        save_results({}, "m", 456, 0, save_dir=tmp_path)
+    # Second call in 'append' mode should not change filename
+    path2 = save_results(
+        {"b": 3.0},
+        method="X",
+        task="Y",
+        num_simulations=1,
+        observation_idx=2,
+        save_directory=tmp_path,
+        filename="report",
+        file_mode="append"
+    )
+    assert path2 == path
 
-    # seed must be int
-    with pytest.raises(TypeError):
-        save_results({}, "m", "t", "zero", save_dir=tmp_path)
 
-    # file_format must be json or csv
+def test_append_mode_adds_rows(tmp_path):
+    """
+    In 'append' mode, calling save_results twice should accumulate rows in the same file.
+    """
+    filename = "accumulate"
+    path = save_results(
+        {"m1": 1},
+        method="M",
+        task="T",
+        num_simulations=1,
+        observation_idx=0,
+        save_directory=tmp_path,
+        filename=filename,
+        file_mode="append"
+    )
+    save_results(
+        {"m2": 2},
+        method="M",
+        task="T",
+        num_simulations=1,
+        observation_idx=1,
+        save_directory=tmp_path,
+        filename=filename,
+        file_mode="append"
+    )
+    rows = read_csv(path)
+    metrics = {r['metric'] for r in rows}
+    assert metrics == {"m1", "m2"}
+    assert len(rows) == 2
+
+
+def test_overwrite_mode_replaces_rows(tmp_path):
+    """
+    In 'write' (overwrite) mode, the file should be truncated before writing new rows.
+    """
+    filename = "overwrite"
+    path = save_results(
+        {"a": 10},
+        method="M",
+        task="T",
+        num_simulations=1,
+        observation_idx=0,
+        save_directory=tmp_path,
+        filename=filename,
+        file_mode="append"
+    )
+    save_results(
+        {"b": 20},
+        method="M",
+        task="T",
+        num_simulations=1,
+        observation_idx=0,
+        save_directory=tmp_path,
+        filename=filename,
+        file_mode="write"
+    )
+    rows = read_csv(path)
+    assert len(rows) == 1
+    assert rows[0]['metric'] == 'b'
+
+
+def test_empty_results_raises(tmp_path):
+    """
+    Passing an empty mapping should raise ValueError.
+    """
     with pytest.raises(ValueError):
-        save_results({}, "m", "t", 0, save_dir=tmp_path, file_format="xml")
+        save_results(
+            {},
+            method="M",
+            task="T",
+            num_simulations=1,
+            observation_idx=0,
+            save_directory=tmp_path
+        )
+
+
+def test_invalid_file_mode_raises(tmp_path):
+    """
+    Passing an unsupported file_mode should raise ValueError.
+    """
+    with pytest.raises(ValueError):
+        save_results(
+            {"m": 1},
+            method="M",
+            task="T",
+            num_simulations=1,
+            observation_idx=0,
+            save_directory=tmp_path,
+            file_mode="invalid"
+        )
