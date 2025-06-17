@@ -2,7 +2,7 @@ import json
 import csv
 import pytest
 
-from src.utils.save_results import save_results
+from src.utils.save_rslt import save_results
 
 
 def test_json_output(tmp_path):
@@ -78,7 +78,7 @@ def test_run_id_generation(tmp_path):
     # Third call causes __run2
     save_results(metrics, method, task, seed, save_dir=save_dir, file_format="json")
     run2 = save_dir / f"{method}__{task}__seed{seed}__run2.json"
-    assert run1.exists()
+    assert run2.exists()
 
 
 def test_input_validation(tmp_path):
