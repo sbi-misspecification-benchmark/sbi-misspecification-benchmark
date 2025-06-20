@@ -1,4 +1,4 @@
-inference:
+inference: 
   method: nre
   num_simulations: 100
   num_observations: 10
