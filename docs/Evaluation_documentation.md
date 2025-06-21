@@ -27,7 +27,7 @@ The task provides a ground-truth posterior for comparison
 
 | Metric | Description                                                                                    |
 | ------ | ---------------------------------------------------------------------------------------------- |
-| `c2st` | Trains a classifier to distinguish inference generated posterior samples from true posterior samples                       |
+| `c2st` | Trains a classifier to distinguish inference generated posterior samples from true posterior samples, value of about 0.5 means that samples are not distinguishable                       |
 | `ppc`  | Compares how well simulated observations using posterior samples match the real one            |
 
 ---
