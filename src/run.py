@@ -4,8 +4,8 @@ import random
 import torch
 
 
-from inference.Run_Inference import run_inference
-from utils.benchmark_run import validate_positive
+from src.inference.Run_Inference import run_inference
+from src.utils.benchmark_run import validate_positive
 
 """
 This script loads a configuration using Hydra and performs inference
@@ -54,22 +54,23 @@ def main(cfg: DictConfig):
         raise ValueError(f"Unknown task: '{task_name}'. Available: {list(task_registry.keys())}")
     task = task_registry[task_name]()
 
-    # Parse task config and ensure valid inputs
-    num_simulations = validate_positive(cfg.task.num_simulations, 100)
-    num_observations = validate_positive(cfg.task.num_observations, 10)
-    num_posterior_samples = validate_positive(cfg.task.num_posterior_samples, 50)
     # Run each method
-    methods = cfg.methods
-    for method in methods:
-        print(f" Running method: {method}")
-        run_inference(
-            task=task,
-            method_name=method,
-            num_simulations=num_simulations,
-            seed=seed,
-            num_posterior_samples=num_posterior_samples,
-            num_observations=num_observations,
-            config=cfg
-        )
+    method = cfg.inference.method.upper()
+    num_simulations = validate_positive(cfg.inference.num_simulations, 100)
+    num_observations = validate_positive(cfg.inference.num_observations, 10)
+    num_posterior_samples = validate_positive(cfg.inference.num_posterior_samples, 50)
+
+    print(f" Running method: {method}")
+    run_inference(
+        task=task,
+        method_name=method,
+        num_simulations=num_simulations,
+        seed=seed,
+        num_posterior_samples=num_posterior_samples,
+        num_observations=num_observations,
+        config=cfg
+    )
+
+
 if __name__ == "__main__":
     main()

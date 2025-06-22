@@ -1,0 +1,6 @@
+task:
+  name: test_task
+
+defaults:
+  - inference: npe
+random_seed: 86
