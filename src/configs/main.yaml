@@ -1,3 +1,6 @@
+defaults:
+- task: misspecified_likelihood
+- inference: npe
 task:
   name: misspecified_likelihood
   tau_m: 0.2
