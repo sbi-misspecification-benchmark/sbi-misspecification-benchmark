@@ -4,7 +4,7 @@ import argparse
 valid_metrics = ["ppc", "mmd", "c2st", "probability_true"]
 
 def run_tool(args):  # dummy
-    return f"Running the tool with metrics: {', '.join(args)}"
+    return f"Running the tool with metric: {', '.join(args)}"
 
 def list_methods():  # dummy
     """Placeholder function for the 'list-methods' command."""
@@ -28,11 +28,11 @@ def help_function(parser):
         help_function(parser)
 
 def handle_command(args):
-    # user can either enter valid metrics manually or choose them
+    # user can either enter valid evaluation manually or choose them
     if args.metrics:
         metrics_input = args.metrics.strip().lower()
     else:
-        print("Enter metrics or press Enter to choose interactively")
+        print("Enter metric or press Enter to choose interactively")
         metrics_input = input().strip().lower()
 
     if metrics_input:
@@ -40,21 +40,21 @@ def handle_command(args):
         invalid = [m for m in user_metrics if m not in valid_metrics]
 
         if invalid:
-            print(f"Invalid metrics: {', '.join(invalid)}")
+            print(f"Invalid metric: {', '.join(invalid)}")
             print(f"Valid metrics are: {', '.join(valid_metrics)}")
         else:
             print(run_tool(user_metrics))
     else:
         selected = ask_user_for_metrics()
         if not selected:
-            print("No metrics selected.")
+            print("No metric selected.")
         else:
             print(run_tool(selected))
 
 def ask_user_for_metrics():
-    # function to choose the metrics
+    # function to choose the evaluation
     selected = []
-    print("You can now choose the metrics to be included")
+    print("You can now choose the metric to be included")
     for metric in valid_metrics:
         answer = input(f"{metric}? (y/n): ").strip().lower()
         if answer == "y":
@@ -77,7 +77,7 @@ def main():
     # run command
     run_parser = subparsers.add_parser("run", help="Run the tool.")
     run_parser.add_argument(
-        "--metrics",
+        "--metric",
         type=str,
     )
 

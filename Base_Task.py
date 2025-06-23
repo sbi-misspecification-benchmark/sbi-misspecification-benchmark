@@ -20,3 +20,7 @@ class BaseTask(ABC):
     def get_observation(self, idx: int):
         """return an observation x for a given index"""
         raise NotImplementedError("Task must implement get_observation method")
+
+    def get_reference_posterior_samples(self, idx: int):
+        """return the "true" posterior samples for a given index"""
+        raise NotImplementedError("Task must implement get_reference_posterior_samples")

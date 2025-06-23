@@ -16,7 +16,7 @@ from src.utils.cli_tools import (
 def test_run_tool_returns_expected_output():
     metrics = ['ppc', 'c2st']
     result = run_tool(metrics)
-    assert result == 'Running the tool with metrics: ppc, c2st'
+    assert result == 'Running the tool with metric: ppc, c2st'
 
 
 def test_list_methods_returns_methods_list():
@@ -32,7 +32,7 @@ def test_handle_run_command_with_valid_metrics(monkeypatch, capsys):
 
     handle_command(args)
     captured = capsys.readouterr()
-    assert 'Running the tool with metrics: ppc, c2st' in captured.out
+    assert 'Running the tool with metric: ppc, c2st' in captured.out
 
 
 def test_handle_run_command_with_invalid_metrics(monkeypatch, capsys):
@@ -41,7 +41,7 @@ def test_handle_run_command_with_invalid_metrics(monkeypatch, capsys):
 
     handle_command(args)
     captured = capsys.readouterr()
-    assert 'Invalid metrics: nonsense' in captured.out
+    assert 'Invalid metric: nonsense' in captured.out
     assert 'Valid metrics are:' in captured.out
 
 
