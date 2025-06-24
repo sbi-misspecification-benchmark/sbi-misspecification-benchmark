@@ -1,98 +1,110 @@
-import json
 import csv
 from pathlib import Path
-from datetime import datetime
+from typing import Any, Literal, Mapping, Optional, Union
+
+from .csv_utils import assert_csv_header_matches, resolve_file_mode
+from .file_utils import ensure_directory
 
 
 def save_results(
-    results,
-    method,
-    task,
-    seed,
-    save_dir="results",
-    file_format="json",
-    **kwargs,
-):
+        results: Mapping[str, float],
+        *,
+        task: str,
+        method: str,
+        num_simulations: int,
+        observation_idx: int,
+        base_directory: Optional[Union[str, Path]] = None,
+        filename: Optional[str] = None,
+        file_mode: Literal["write", "append"] = "write",
+        **metadata: Union[str, int, float, bool],
+) -> Path:
     """
-    Save benchmark results as JSON or CSV.
+    Save benchmark results to a CSV file (one row per metric).
+
+    A folder structure under `base_directory` is created as:
+        outputs/
+        <task>_<method>/
+        sims_<num_simulations>/
+        obs_<observation_idx>/
+
+    By default, the file “metrics.csv” in that leaf folder is overwritten on each call.
+    To add rows instead, set `file_mode="append"`.
+    To write multiple files in the same folder, supply a custom `filename`.
 
     Args:
-        results (dict): Benchmark results as {metric_name (str): score (float or int)}
-                        (e.g.: {"C2ST": 0.84, "runtime_sec": 123.5}, ...).
-        method (str): Inference algorithm name (e.g.: "REJ_ABC", "nNLE", ...).
-        task (str): Benchmark task name (e.g.: "two_moons", "gaussian_linear", ...).
-        seed (int): Random seed used.
-        save_dir (str, optional): Output directory (default "results").
-        file_format (str, optional): "json" or "csv" (default "json").
-        **kwargs: Additional metadata to include.
+        results (Mapping[str, float]): Mapping of metric names to their respective values.
+        task (str): Benchmark task name.
+        method (str): Inference method name.
+        num_simulations (int): Number of simulations.
+        observation_idx (int): Index of observation.
+        base_directory (Path | str, optional): Root directory for folder structure; defaults to cwd.
+        filename (str, optional): Custom .csv filename (stem or with extension). Defaults to "metrics.csv".
+        file_mode ("write" or "append", optional):
+            - "write" (default): overwrite the file if it exists, or create it otherwise.
+            - "append": append rows if the file exists, or create it otherwise.
+        **metadata: Additional metadata columns (e.g.: random seed).
+
+    Raises:
+        ValueError: If `results` is empty.
+
+    Returns:
+        Path: The absolute path of the .csv file the benchmark results have been saved to.
     """
 
-    # --- Input type validation ---
-    if not isinstance(method, str):
-        raise TypeError(f"Expected 'method' to be str, got {type(method).__name__}")
-    if not isinstance(task, str):
-        raise TypeError(f"Expected 'task' to be str, got {type(task).__name__}")
-    if not isinstance(seed, int):
-        raise TypeError(f"Expected 'seed' to be int, got {type(seed).__name__}")
-    if not isinstance(save_dir, (str, Path)):
-        raise TypeError(
-            f"Expected 'save_dir' to be a str or Path, got {type(save_dir).__name__}"
-        )
-    if not isinstance(file_format, str):
-        raise TypeError(
-            f"Expected 'file_format' to be str, got {type(file_format).__name__}"
-        )
+    # Assert results is not empty
+    if not results:
+        raise ValueError("`results` is empty; nothing to save.")
 
-    file_format = file_format.lower()  # allow "JSON", "Csv", etc.
-    if file_format not in {"json", "csv"}:
-        raise ValueError(f"Unsupported file format: {file_format}. Use 'json' or 'csv'.")
 
-    # --- Prepare save location and filename ---
-    save_dir = Path(save_dir)
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # Determine the save path
+    base_dir = Path.cwd() if base_directory is None else Path(base_directory)  # Normalize the base directory
+    stem = Path(filename).stem if filename else "metrics"  # Normalize the file stem
+    save_path = (base_dir
+                / "outputs"
+                / f"{task}_{method}"
+                / f"sims_{num_simulations}"
+                / f"obs_{observation_idx}"
+                / f"{stem}.csv")
 
-    base = f"{method}__{task}__seed{seed}"
-    filename = f"{base}.{file_format}"
-    filepath = save_dir / filename
+    ensure_directory(save_path.parent) # Ensure the determined save path exists
 
-    # if this exact filename exists, append __runN
-    if filepath.exists():
-        run_id = 1
-        while True:
-            filename = f"{base}__run{run_id}.{file_format}"
-            filepath = save_dir / filename
-            if not filepath.exists():
-                break
-            run_id += 1
 
-    # universal timestamp
-    timestamp = datetime.utcnow().replace(microsecond=0).isoformat()
-
-    # --- Write out ---
-    if file_format == "json":
-        output = {
-            "method": method,
+    # Build rows for each metric
+    rows = [
+        {
+            "metric": metric_name,
+            "value": metric_value,
             "task": task,
-            "seed": seed,
-            "timestamp": timestamp,
-            **kwargs,
-            "metrics": results,
-        }
-        with open(filepath, "w") as f:
-            json.dump(output, f, indent=4)
-
-    else:  # csv
-        row = {
             "method": method,
-            "task": task,
-            "seed": seed,
-            "timestamp": timestamp,
-            **kwargs,
-            **results,
+            "num_simulations": num_simulations,
+            "observation_idx": observation_idx,
+            **metadata,
         }
-        with open(filepath, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
+        for metric_name, metric_value in results.items()
+    ]
+
+
+    # Assert that the headers/ fieldnames match when appending to an existing CSV file
+    base_fieldnames = ["metric", "value", "task", "method", "num_simulations", "observation_idx"]
+    metadata_fieldnames = sorted(metadata.keys())  # normalize metadata fieldnames order
+
+    fieldnames = base_fieldnames + metadata_fieldnames
+
+    if file_mode == "append" and save_path.exists():
+        assert_csv_header_matches(save_path, fieldnames)
+
+
+    # Write or append to the save path
+    mode, write_header = resolve_file_mode(save_path, file_mode)  # Decide mode and header-writing behavior
+
+    with save_path.open(mode, newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if write_header:
             writer.writeheader()
-            writer.writerow(row)
+        writer.writerows(rows)
 
-    print(f"Results saved to {filepath.resolve()}")
+
+    # Confirm the file was saved
+    print(f"Saved {len(rows)} metric(s) ➜ {save_path}")
+
+    return save_path
