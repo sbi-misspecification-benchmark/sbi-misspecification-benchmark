@@ -1,107 +1,110 @@
 import csv
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Mapping, Literal
+from typing import Any, Literal, Mapping, Optional, Union
 
-from .file_utils import ensure_directory, resolve_write_mode, unique_path
-from .csv_utils import assert_csv_header_matches
-
-# Default CSV schema
-FIELDNAMES = [
-    "method", "task", "num_simulations", "observation_idx",
-    "metric", "value", "timestamp"
-]
+from .csv_utils import assert_csv_header_matches, resolve_file_mode
+from .file_utils import ensure_directory
 
 
 def save_results(
         results: Mapping[str, float],
         *,
-        method: str,
         task: str,
+        method: str,
         num_simulations: int,
         observation_idx: int,
-        directory: str | Path = "outputs/results",
-        filename: str | None = None,
-        file_mode: Literal["write", "append"] = "append",
-        sep: str = "__",
-        encoding: str = "utf-8",
-        **metadata: str,
+        base_directory: Optional[Union[str, Path]] = None,
+        filename: Optional[str] = None,
+        file_mode: Literal["write", "append"] = "write",
+        **metadata: Union[str, int, float, bool],
 ) -> Path:
     """
     Save benchmark results to a CSV file (one row per metric).
 
+    A folder structure under `base_directory` is created as:
+        outputs/
+        <task>_<method>/
+        sims_<num_simulations>/
+        obs_<observation_idx>/
+
+    By default, the file “metrics.csv” in that leaf folder is overwritten on each call.
+    To add rows instead, set `file_mode="append"`.
+    To write multiple files in the same folder, supply a custom `filename`.
+
     Args:
         results (Mapping[str, float]): Mapping of metric names to their respective values.
-        method (str): Inference method name
-        task (str): Benchmark task name
+        task (str): Benchmark task name.
+        method (str): Inference method name.
         num_simulations (int): Number of simulations.
         observation_idx (int): Index of observation.
-        directory (str, optional): Directory to save the file. Defaults to "outputs/results".
-        filename (str, optional): CSV filename.
-            If None, a unique name within the given directory is generated based on method and task name.
-        file_mode ("write" or "append", optional): 'write' to overwrite;
-            'append' to append or create if the file does not exist.
-            Defaults to "append".
-        sep (str, optional): Separator between parts of the auto-generated stem.
-        encoding (str, optional): File encoding.
-        **metadata: Additional metadata to include (e.g.: random seed).
+        base_directory (Path | str, optional): Root directory for folder structure; defaults to cwd.
+        filename (str, optional): Custom .csv filename (stem or with extension). Defaults to "metrics.csv".
+        file_mode ("write" or "append", optional):
+            - "write" (default): overwrite the file if it exists, or create it otherwise.
+            - "append": append rows if the file exists, or create it otherwise.
+        **metadata: Additional metadata columns (e.g.: random seed).
 
     Raises:
         ValueError: If `results` is empty.
 
     Returns:
-        Path: The path of the written CSV file.
+        Path: The absolute path of the .csv file the benchmark results have been saved to.
     """
 
-    # Asserts that results are not empty
+    # Assert results is not empty
     if not results:
         raise ValueError("`results` is empty; nothing to save.")
 
-    # Ensure the save directory (and any missing parents) exists
-    directory = Path(directory)
-    ensure_directory(directory)
 
-    # Determine the saving path
-    if filename:
-        stem = Path(filename).stem  # Gets the stem, regardless of whether the filename had an extension or not
-        path = directory / f"{stem}.csv"
-    else:
-        stem = f"{method}{sep}{task}"
-        desired_path = directory / f"{stem}.csv"
-        path = unique_path(desired_path, sep=sep)
+    # Determine the save path
+    base_dir = Path.cwd() if base_directory is None else Path(base_directory)  # Normalize the base directory
+    stem = Path(filename).stem if filename else "metrics"  # Normalize the file stem
+    save_path = (base_dir
+                / "outputs"
+                / f"{task}_{method}"
+                / f"sims_{num_simulations}"
+                / f"obs_{observation_idx}"
+                / f"{stem}.csv")
 
+    ensure_directory(save_path.parent) # Ensure the determined save path exists
 
-    # Decide mode and header-writing behavior
-    mode, write_header = resolve_write_mode(path, file_mode)
 
     # Build rows for each metric
-    timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     rows = [
         {
-            "method": method,
-            "task": task,
-            "num_simulations": num_simulations,
-            "observation_idx": observation_idx,
             "metric": metric_name,
             "value": metric_value,
-            "timestamp": timestamp,
+            "task": task,
+            "method": method,
+            "num_simulations": num_simulations,
+            "observation_idx": observation_idx,
             **metadata,
         }
         for metric_name, metric_value in results.items()
     ]
 
-    # Assert that the headers match when appending to an existing CSV file
-    if file_mode == "append" and path.exists():
-        assert_csv_header_matches(path, FIELDNAMES)
 
-    # Write or append to the CSV
-    with path.open(mode, newline="", encoding=encoding) as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+    # Assert that the headers/ fieldnames match when appending to an existing CSV file
+    base_fieldnames = ["metric", "value", "task", "method", "num_simulations", "observation_idx"]
+    metadata_fieldnames = sorted(metadata.keys())  # normalize metadata fieldnames order
+
+    fieldnames = base_fieldnames + metadata_fieldnames
+
+    if file_mode == "append" and save_path.exists():
+        assert_csv_header_matches(save_path, fieldnames)
+
+
+    # Write or append to the save path
+    mode, write_header = resolve_file_mode(save_path, file_mode)  # Decide mode and header-writing behavior
+
+    with save_path.open(mode, newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         if write_header:
             writer.writeheader()
         writer.writerows(rows)
 
-    # Confirm the file was saved
-    print(f"Saved {len(rows)} metric(s) ➜ {path.resolve()}")
 
-    return path
+    # Confirm the file was saved
+    print(f"Saved {len(rows)} metric(s) ➜ {save_path}")
+
+    return save_path

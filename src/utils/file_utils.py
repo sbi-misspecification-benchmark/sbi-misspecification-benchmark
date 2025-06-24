@@ -1,23 +1,20 @@
-from pathlib import Path
 from itertools import count
-from typing import Literal, Tuple
+from pathlib import Path
 
 
 def ensure_directory(directory: Path | str) -> None:
     """
-    Ensure that the directory exists.
+    Ensure that the directory and its parents exist.
 
-    If it does not yet exist, the directory and any missing parents will be created.
-    Otherwise, no changes are made.
 
     Args:
-        directory (Path | str): Path to the directory to ensure.
+        directory (Path | str): Directory to ensure.
     """
-    dir_path = Path(directory)
-    dir_path.mkdir(parents=True, exist_ok=True)
+    directory_path = Path(directory)
+    directory_path.mkdir(parents=True, exist_ok=True)
 
 
-def unique_path(path: Path, *, sep: str = "__") -> Path:
+def unique_path(path: Path, *, sep: str = "_") -> Path:
     """
     Generate a unique filename within the same directory by appending a running ID if needed,
     to make sure the path is unique and doesn't collide with existing paths.
@@ -48,10 +45,10 @@ def unique_path(path: Path, *, sep: str = "__") -> Path:
 
 
 def create_unique_path(
-    save_directory: str | Path,
+    directory: str | Path,
     stem: str,
     *,
-    extension: str = ".csv",
+    extension: str,
     sep: str = "__",
 ) -> Path:
     """
@@ -64,7 +61,7 @@ def create_unique_path(
           /output/results/gaussian_linear__nNLE__1.csv).
 
     Args:
-        save_directory (str | Path): Directory where the file will be saved.
+        directory (str | Path): Directory where the file will be saved.
         stem (str): Stem of the desired filename (without extension).
         extension (str, optional): File extension (including leading dot). Defaults to ".csv".
         sep (str, optional): Separator between stem and extension. Defaults to "__".
@@ -72,31 +69,6 @@ def create_unique_path(
     Returns:
         Path: A created Path with a unique filename within the same directory.
     """
-    directory = Path(save_directory)
-    ensure_dir(directory)
-    return unique_path(directory / f"{stem}{extension}", sep=sep)
-
-
-def resolve_write_mode(path: Path, write_mode: Literal["write", "append"] = "append") -> Tuple[str, bool]:
-    """
-    Determine write mode and whether to write the header row or not.
-
-        - "write": always create a new file (write mode "w"), write header.
-        - "append": append if the file exists (write mode "a"), don't write header; Otherwise, behave like "write".
-
-    Args:
-        path (Path): The target file path.
-        write_mode (WriteMode): "write" or "append".
-            Defaults to "append".
-
-    Returns:
-        Tuple[str, bool]: (mode, write_header), where `mode` is "w" or "a",
-                          and `write_header` a boolean that indicates if a header row should be written.
-    """
-    if write_mode == "write":
-        return "w", True  # Write a new file, and create a header
-    if write_mode == "append":
-        if path.exists():
-            return "a", False  # Append to an existing file, and don't create a header
-        return "w", True  # Write a new file, and create a header
-    raise ValueError(f"Unknown file_mode: {write_mode!r}")
+    directory_path = Path(directory)
+    ensure_directory(directory_path)
+    return unique_path(directory_path / f"{stem}{extension}", sep=sep)
