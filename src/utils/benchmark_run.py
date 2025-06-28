@@ -26,7 +26,7 @@ def main(cfg: DictConfig):
     num_simulations = cfg.inference.num_simulations
     num_observations = cfg.inference.num_observations
     num_posterior_samples = cfg.inference.num_posterior_samples
-    metrics_list = cfg.evaluation.metrics
+    metrics_list = cfg.metrics.metrics
 
     random_seed = cfg.get("random_seed", None)
     if random_seed is not None:
