@@ -57,7 +57,7 @@ def test_run_inference():
 
     # Check if new folders are created for each observation 
     for idx in range(config["task"]["num_observations"]):
-        outdir = f"outputs/DummyTask_NPE/obs_{idx}"
+        outdir = f"outputs/DummyTask_NPE/sims_{config['task']['num_simulations']}/obs_{idx}"
         assert os.path.exists(outdir), f"Missing output dir: {outdir}"
         assert os.path.exists(os.path.join(outdir, "posterior_samples.pt"))
         assert os.path.exists(os.path.join(outdir, "config_used.yaml"))
