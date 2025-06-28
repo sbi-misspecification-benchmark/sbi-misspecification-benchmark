@@ -10,6 +10,7 @@ import torch
 from sbi.inference import NPE
 from src.inference.Run_Inference import run_inference
 import os
+from omegaconf import OmegaConf
 #from Base_Task import BaseTask
 
 
@@ -41,15 +42,15 @@ class DummyTask():
 
 def test_run_inference():
     task = DummyTask()
-    
-    
+
+    cfg = OmegaConf.create(config)
     samples = run_inference(task, 
                             method_name = "NPE", 
                             num_simulations = config["task"]["num_simulations"], 
                             num_posterior_samples = config["task"]["num_posterior_samples"], 
                             num_observations = config["task"]["num_observations"],
                             seed= 42,
-                            config = config)
+                            config = cfg)
 
     assert isinstance(samples, torch.Tensor)
     assert samples.shape == (20, 2)
