@@ -1,6 +1,6 @@
 defaults:
   - task: misspecified_likelihood
   - inference: npe
-  - evaluation: basic
+  - metrics: basic
   - _self_
 random_seed: 42
