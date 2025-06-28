@@ -68,7 +68,7 @@ def run_inference(task, method_name, num_simulations, seed=None, num_posterior_s
         samples = posterior.sample((num_posterior_samples,), x=x_obs)
 
         # Create a new folder for each observation and save results
-        output_dir = f"outputs/{task_name}_{method_name}/obs_{idx}/"
+        output_dir = f"outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}/"
         os.makedirs(output_dir, exist_ok=True)
         torch.save(samples, os.path.join(output_dir, "posterior_samples.pt"))
 

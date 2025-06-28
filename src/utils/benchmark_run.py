@@ -3,6 +3,7 @@ import yaml
 import random
 import os
 import csv
+import torch
 
 from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
@@ -12,18 +13,24 @@ from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
 
 # Define a dummy task class
-class DummyTask:
-    def simulator(self, thetas):
-        print(f"Running DummyTask simulator with thetas: {thetas}")
+class DummyTask2():
+    def get_prior(self):
+        return torch.distributions.MultivariateNormal(
+            loc=torch.zeros(2), covariance_matrix=torch.eye(2)
+        )
+    def get_reference_posterior_samples(self, idx):
+        return torch.ones(100, 2)  # Fake samples
+
+    def get_simulator(self):
+        return lambda theta: theta + torch.randn_like(theta)
 
     def get_observation(self, idx=0):
-        # Example: return a dummy observation
-        import torch
         return torch.tensor([0.5, 0.5])
+
 
 # Task registry to hold all available task classes
 task_registry = {
-    "test_task": DummyTask,
+    "test_task": DummyTask2,
     "misspecified_likelihood": LikelihoodMisspecifiedTask,
 }
 
@@ -71,5 +78,6 @@ def run_benchmark(config):
         task=task,
         method_name=method,
         metric_name=metric_name,
-        num_observations=num_observations
+        num_observations=num_observations,
+        num_simulations=num_simulations,
     )
