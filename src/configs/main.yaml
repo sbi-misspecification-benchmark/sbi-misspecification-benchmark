@@ -1,11 +1,6 @@
 defaults:
-- task: misspecified_likelihood
-- inference: npe
-task:
-  name: misspecified_likelihood
-  tau_m: 0.2
-  lambda_val: 0.6
-inference:
-  method: NPE
-metrics: [c2st, ppc]
+  - task: misspecified_likelihood
+  - inference: npe
+  - evaluation: basic
+  - _self_
 random_seed: 42
