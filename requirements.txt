@@ -7,3 +7,4 @@ numpy>=1.24
 sbi>=0.21.0
 scikit-learn~=1.6.1
 pandas~=2.2.3
+hydra-core>=1.3
