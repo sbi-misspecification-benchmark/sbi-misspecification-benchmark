@@ -1,21 +1,23 @@
 """
 consolidate_metrics
 
-Combine `metrics.csv` files under a given input dir into a single CSV and save it at a given output dir.
+Combine `metrics.csv` files under a given input dir into a single CSV and save it at a given output file.
 
 The script will:
     1. Glob for `sims_*/obs_*/metrics.csv` under `input_dir`
     2. Read each file into a DataFrame
     3. Concatenate them into one combined DataFrame
-    4. Write the result to `output_file`
+    4. Validate columns
+    5. Write the result to `output_file`
+
 
 Usage:
     python consolidate_metrics.py --input_dir <base_directory> --output_file <metrics_all.csv>
 """
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 
 import pandas as pd
 from src.utils.csv_utils import gather_csv_files, read_csv_files
@@ -55,6 +57,7 @@ def consolidate(input_dir: Path, output_file: Path) -> pd.DataFrame:
 
     Raises:
         FileNotFoundError: If no metrics.csv files are found.
+        ValueError: If base fieldnames are missing/mis-ordered or contain missing values.
     """
     # 1) gather metrics.csv files
     pattern = input_dir / "sims_*" / "obs_*" / "metrics.csv"
@@ -68,8 +71,41 @@ def consolidate(input_dir: Path, output_file: Path) -> pd.DataFrame:
     # 3) concatenate into one combined dataframe
     combined = pd.concat(frames, ignore_index=True)
 
-    # 4) write out
+    # 4) Validate columns
+    # 4a) Assert the base fieldnames exist and metadata columns are sorted
+    base_fieldnames = [
+        "metric",
+        "value",
+        "task",
+        "method",
+        "num_simulations",
+        "observation_idx",
+    ]
+    # Required columns must all be present, in that order
+    cols = list(combined.columns)
+    if cols[: len(base_fieldnames)] != base_fieldnames:
+        raise ValueError(
+            f"Wrong CSV structure: expected first columns {base_fieldnames!r}, "
+            f"but got {cols[: len(base_fieldnames)]!r}"
+        )
+
+    # Any extra (metadata) cols must come after and sorted lexicographically
+    extra = cols[len(base_fieldnames):]
+    if extra != sorted(extra):
+        raise ValueError(
+            f"Unexpected or mis-ordered metadata columns: {extra!r}. "
+            f"Should be sorted."
+        )
+
+    # 4b) Assert none of the base fieldnames columns contain missing values
+    required = ["metric", "value", "task", "method", "num_simulations", "observation_idx"]
+    missing = combined[required].isnull().sum()
+    if missing.any():
+        raise ValueError(f"Missing data in required columns:\n{missing[missing > 0]}")
+
+    # 5) write out
     combined.to_csv(output_file, index=False)
+
     return combined
 
 
@@ -78,8 +114,8 @@ def main():
 
     try:
         df = consolidate(args.input_dir, args.output_file)
-    except FileNotFoundError as e:
-        print(str(e), file=sys.stderr)
+    except (FileNotFoundError, ValueError) as e:
+        print(e)
         sys.exit(1)
 
     print(f"Wrote {len(df)} rows to {args.output_file!r}")
