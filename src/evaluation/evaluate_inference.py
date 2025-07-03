@@ -25,7 +25,7 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
     scores=[]
     for idx in range (num_observations):
         base_path = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
-        posterior_samples = torch.load(os.path.join(base_path, 'posterior_samples.pt'))
+        posterior_samples = torch.load(os.path.join(base_path, 'posterior_samples.pt'), weights_only=True)
         observation = task.get_observation(idx)
         reference_samples = task.get_reference_posterior_samples(idx)
 
