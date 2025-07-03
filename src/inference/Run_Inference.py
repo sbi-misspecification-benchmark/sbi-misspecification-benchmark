@@ -15,7 +15,15 @@ methods = {
 }
 
 
-def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples = 50, num_observations = 10, config = None):
+def run_inference(
+    task,
+    method_name,
+    num_simulations,
+    num_posterior_samples,
+    num_observations,
+    seed=None,
+    config=None
+):
 
     """
     Run simulation-based inference on a given task using the specified method.

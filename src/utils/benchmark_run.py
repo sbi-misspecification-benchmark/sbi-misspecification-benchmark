@@ -54,9 +54,9 @@ def run_benchmark(config):
     task = task_registry[task_name]()
 
     method = config.inference.method.upper()
-    num_simulations = validate_positive(config.inference.num_simulations, 100)
-    num_observations = validate_positive(config.inference.num_observations, 10)
-    num_posterior_samples = validate_positive(config.inference.num_posterior_samples, 50)
+    num_simulations = config.inference.num_simulations
+    num_observations = config.inference.num_observations
+    num_posterior_samples = config.inference.num_posterior_samples
 
     print(
         f"\n Running {method} on task {task_name} with {num_simulations} simulations and {num_observations} observations\n")
