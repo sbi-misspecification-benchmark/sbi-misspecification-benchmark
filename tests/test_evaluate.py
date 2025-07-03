@@ -90,7 +90,7 @@ def test_run_inference_and_evaluate():
     )
 
     # Evaluates inference, loads saved samples
-    score = evaluate_inference(task, method, metric_name=metric, num_observations=1)
+    score = evaluate_inference(task, method, metric_name=metric, num_observations=1, num_simulations=num_simulations)
 
     # Checks if score is a float
     assert isinstance(score, float)

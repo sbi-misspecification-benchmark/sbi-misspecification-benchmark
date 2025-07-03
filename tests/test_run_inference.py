@@ -10,6 +10,7 @@ import torch
 from sbi.inference import NPE
 from src.inference.Run_Inference import run_inference
 import os
+from omegaconf import OmegaConf
 #from Base_Task import BaseTask
 
 
@@ -41,22 +42,22 @@ class DummyTask():
 
 def test_run_inference():
     task = DummyTask()
-    
-    
+
+    cfg = OmegaConf.create(config)
     samples = run_inference(task, 
                             method_name = "NPE", 
                             num_simulations = config["task"]["num_simulations"], 
                             num_posterior_samples = config["task"]["num_posterior_samples"], 
                             num_observations = config["task"]["num_observations"],
                             seed= 42,
-                            config = config)
+                            config = cfg)
 
     assert isinstance(samples, torch.Tensor)
     assert samples.shape == (20, 2)
 
     # Check if new folders are created for each observation 
     for idx in range(config["task"]["num_observations"]):
-        outdir = f"outputs/DummyTask_NPE/obs_{idx}"
+        outdir = f"outputs/DummyTask_NPE/sims_{config['task']['num_simulations']}/obs_{idx}"
         assert os.path.exists(outdir), f"Missing output dir: {outdir}"
         assert os.path.exists(os.path.join(outdir, "posterior_samples.pt"))
         assert os.path.exists(os.path.join(outdir, "config_used.yaml"))
