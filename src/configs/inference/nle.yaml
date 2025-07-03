@@ -1,4 +1,5 @@
-method: nle
-num_simulations: 100
-num_observations: 4
-num_posterior_samples: 100
+inference:
+  method: nle
+  num_simulations: 100
+  num_observations: 10
+  num_posterior_samples: 100

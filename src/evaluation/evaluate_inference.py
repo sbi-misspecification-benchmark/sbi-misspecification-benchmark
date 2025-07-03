@@ -6,7 +6,7 @@ from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
 
-def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations ):
+def evaluate_inference(task, method_name, metric_name, num_observations ):
     """
     Evaluate how well a chosen inference method estimate the true posterior
 
@@ -24,7 +24,7 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
     task_name = task.__class__.__name__
     scores=[]
     for idx in range (num_observations):
-        base_path = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
+        base_path = f'outputs/{task_name}_{method_name}/obs_{idx}'
         posterior_samples = torch.load(os.path.join(base_path, 'posterior_samples.pt'))
         observation = task.get_observation(idx)
         reference_samples = task.get_reference_posterior_samples(idx)
@@ -61,5 +61,6 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
 
     print(f"{metric_name.upper()} for {task_name}/{method_name}: {score:.3f}")
     return score
+
 
 

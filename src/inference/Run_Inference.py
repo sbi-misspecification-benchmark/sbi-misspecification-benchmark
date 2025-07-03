@@ -1,49 +1,80 @@
+# This script didn't run for me if I didnt set the KMP_DUPLICATE_LIB_OK environment variable
+# import os
+# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+import torch
+from sbi.inference import NPE, NLE, NRE
+import yaml
 import os
-import csv
-from src.evaluation.evaluate_inference import compute_c2st, compute_ppc
 
-def run_full_benchmark(
-    task,
-    method_name,
-    num_simulations,
-    num_observations,
-    num_posterior_samples,
-    metrics_list,
-    output_dir,
-    seed,
-    cfg,
-):
-    os.makedirs(output_dir, exist_ok=True)
-    csv_path = os.path.join(output_dir, "metrics.csv")
-    csv_header = ["task", "method", "num_simulations", "obs_idx"] + list(metrics_list)
-    metrics_rows = []
+# List of inference methods
+methods = {
+    "NPE": NPE,
+    "NLE": NLE,
+    "NRE": NRE,
+}
 
-    for obs_idx in range(num_observations):
-        samples = run_inference(
-            task=task,
-            method_name=method_name,
-            num_simulations=num_simulations,
-            seed=seed,
-            num_posterior_samples=num_posterior_samples,
-            num_observations=1,
-            config=cfg,
-        )
-        ground_truth = task.get_ground_truth(idx=obs_idx)
-        x_obs = task.get_observation(idx=obs_idx)
-        metric_values = []
-        for metric in metrics_list:
-            if metric.lower() == "c2st":
-                metric_values.append(compute_c2st(samples, ground_truth, threshold=0.3, seed=12))
-            elif metric.lower() == "ppc":
-                metric_values.append(compute_ppc(samples, x_obs))
-            else:
-                metric_values.append(float("nan"))
-        row = [task.name, method_name, num_simulations, obs_idx] + metric_values
-        metrics_rows.append(row)
 
-    with open(csv_path, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(csv_header)
-        for row in metrics_rows:
-            writer.writerow(row)
-    print(f"Saved metrics csv: {csv_path}")
+def run_inference(task, method_name, num_simulations, seed=None, num_posterior_samples = 50, num_observations = 10, config = None):
+
+    """
+    Run simulation-based inference on a given task using the specified method.
+
+    Args:
+        task: The task object providing prior, simulator, and observation interface.
+        method_name: The inference method to use ("NPE", "NLE", or "NRE").
+        num_simulations: Number of simulations for training.
+        seed: Random seed for reproducibility.
+        num_posterior_samples: Number of posterior samples to generate per observation.
+        num_observations: Number of observations to loop over.
+        config: (optional) Configuration dictionary.
+            NOTE: This parameter is used **solely for saving the configuration** to disk (e.g., as 'config_used.yaml').
+            It is **not** used for extracting values such as `task`, `method_name`, or `num_observations`.
+            All required arguments must be passed explicitly.
+
+    Returns:
+        samples: Posterior samples from the last observation.
+    """
+    if method_name not in methods:
+        raise ValueError(f"Method {method_name} is not supported. Choose from {list(methods.keys())}.")
+
+    method_class = methods[method_name]
+
+    prior = task.get_prior()
+    simulator = task.get_simulator()
+
+    if seed is not None:
+        torch.manual_seed(seed)
+
+    # draw parameters from prior
+    theta = prior.sample((num_simulations,))
+
+    # simulate data
+    x = simulator(theta)
+
+    # create and train inference model
+    inference = method_class(prior)
+    density_estimator = inference.append_simulations(theta, x).train()
+
+    # perform inference
+    posterior = inference.build_posterior(density_estimator)
+
+
+    task_name = task.__class__.__name__  # get task name
+
+    # Loop over observations
+    for idx in range(num_observations):
+        x_obs = task.get_observation(idx=idx)
+        samples = posterior.sample((num_posterior_samples,), x=x_obs)
+
+        # Create a new folder for each observation and save results
+        output_dir = f"outputs/{task_name}_{method_name}/obs_{idx}/"
+        os.makedirs(output_dir, exist_ok=True)
+        torch.save(samples, os.path.join(output_dir, "posterior_samples.pt"))
+
+        # Save config in each observation folder
+        if config is not None:
+            with open(os.path.join(output_dir, "config_used.yaml"), "w") as f:
+                yaml.dump(config, f)
+
+    return samples
