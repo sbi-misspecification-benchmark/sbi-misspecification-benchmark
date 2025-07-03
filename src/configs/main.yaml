@@ -1,6 +1,6 @@
 defaults:
-  - task: misspecified_likelihood
+  - task: test_task
   - inference: npe
-  - metrics: basic
+  - metric: c2st
   - _self_
-random_seed: 42
+random_seed: 86
