@@ -10,8 +10,6 @@ from src.inference.Run_Inference import run_inference
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
 
-
-
 # Define a dummy task class
 class DummyTask2():
     def get_prior(self):
