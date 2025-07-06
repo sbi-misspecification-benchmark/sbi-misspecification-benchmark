@@ -1,14 +1,13 @@
 import os
 import torch
 import pandas as pd
-from src.utils.io_utils import load_tensor, save_file
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
 
-def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations ):
+def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations):
     """
-    Evaluate how well a chosen inference method estimate the true posterior
+    Evaluate how well a chosen inference method estimate the true posterior and save results.
 
     Args:
         task: an object that implements Base_Task interface and comes with the following
@@ -22,13 +21,17 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
         float: the computed score of the metric and saves it as CSV file.
     """
     task_name = task.__class__.__name__
-    scores=[]
-    for idx in range (num_observations):
-        base_path = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
-        posterior_samples = torch.load(os.path.join(base_path, 'posterior_samples.pt'), weights_only=True)
+    last_score = 0.0
+
+    for idx in range(num_observations):
+        obs_dir = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
+
+        # Load data
+        posterior_samples = torch.load(os.path.join(obs_dir, 'posterior_samples.pt'), weights_only=True)
         observation = task.get_observation(idx)
         reference_samples = task.get_reference_posterior_samples(idx)
 
+        # Compute metric
         if metric_name == "c2st":
             score = compute_c2st(
             posterior_samples,
@@ -41,25 +44,18 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
         elif metric_name == "ppc":
             simulator = task.get_simulator()
             score = compute_ppc(posterior_samples, observation, simulator)
-        scores.append({
+
+        # Save metric in observation directory
+        metric_data = {
             "obs_idx": idx,
             "task": task_name,
             "method": method_name,
             "metric": metric_name,
             "score": score,
-        })
+        }
+        pd.DataFrame([metric_data]).to_csv(os.path.join(obs_dir, f"metric_{metric_name}.csv"), index=False)
 
+        last_score = score
+        print(f"{metric_name.upper()} for obs {idx}: {score:.3f}")
 
-    df = pd.DataFrame([{
-        "task": task_name,
-        "method": method_name,
-        "metric": metric_name,
-        "score": score
-    }])
-    save_file(task_name, method_name, "evaluation.csv", df)
-
-
-    print(f"{metric_name.upper()} for {task_name}/{method_name}: {score:.3f}")
-    return score
-
-
+    return last_score
