@@ -7,22 +7,8 @@ from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
-# Define a dummy task class
-class DummyTask2():
-    def get_prior(self):
-        return torch.distributions.MultivariateNormal(
-            loc=torch.zeros(2), covariance_matrix=torch.eye(2)
-        )
-    def get_reference_posterior_samples(self, idx):
-        return torch.ones(100, 2)  # Fake samples
-    def get_simulator(self):
-        return lambda theta: theta + torch.randn_like(theta)
-    def get_observation(self, idx=0):
-        return torch.tensor([0.5, 0.5])
-
 # Task registry to hold all available task classes
 task_registry = {
-    "test_task": DummyTask2,
     "misspecified_likelihood": LikelihoodMisspecifiedTask,
 }
 
@@ -69,7 +55,6 @@ def run_benchmark(config):
             num_simulations=num_simulations,
             obs_offset=obs_idx
         )
-        # evaluate_inference returns a dict per obs
         all_metrics.append({
             "obs_idx": obs_idx,
             "task": task_name,

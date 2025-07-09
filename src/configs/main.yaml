@@ -1,7 +1,13 @@
 defaults:
-  - task: test_task
+  - task: misspecified_likelihood
   - inference: npe
   - metric: c2st
   - _self_
 
 random_seed: 86
+
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      inference.num_simulations: 100,1000
