@@ -1,8 +1,7 @@
 import pandas as pd
 from omegaconf import OmegaConf
-import pytest
+from src.utils.benchmark_run import run_benchmark
 
-from utils.benchmark_run import run_benchmark
 
 
 
