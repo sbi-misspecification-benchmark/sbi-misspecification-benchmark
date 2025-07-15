@@ -10,4 +10,4 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      inference.num_simulations: 100,1000
+      inference.num_simulations: ${inference.num_simulations}
