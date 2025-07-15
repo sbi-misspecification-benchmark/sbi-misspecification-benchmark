@@ -4,7 +4,6 @@ from omegaconf import OmegaConf
 from src.utils.benchmark_run import run_benchmark, task_registry
 from tests.test_evaluate import DummyTask
 
-
 def test_cfg():
     return OmegaConf.create({
         "task": {"name": "test_task"},
@@ -18,31 +17,26 @@ def test_cfg():
         "random_seed": 42
     })
 
-
 def test_run_creates_expected_outputs(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-
-
 
     task_registry["test_task"] = DummyTask
 
     run_benchmark(test_cfg())
 
-    base = tmp_path / "outputs/test_task_NPE/sims_10"
+    base = tmp_path / "outputs/test_task_NPE_Solution/sims_10"
     assert base.exists(), "Output directory was not created"
 
     metrics_file = base / "metrics.csv"
     assert metrics_file.exists(), "metrics.csv was not created"
 
-
 def test_no_duplicates(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-
 
     task_registry["test_task"] = DummyTask
 
     run_benchmark(test_cfg())
 
-    metrics_file = tmp_path / "outputs/test_task_NPE/sims_10/metrics.csv"
+    metrics_file = tmp_path / "outputs/test_task_NPE_Solution/sims_10/metrics.csv"
     df = pd.read_csv(metrics_file)
     assert len(df) == 2, "Expected two rows for two observations"
