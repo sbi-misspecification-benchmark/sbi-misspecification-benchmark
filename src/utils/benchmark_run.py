@@ -63,7 +63,7 @@ def run_benchmark(config):
             "score": score
         })
     # Save metrics.csv in sims_{num_simulations} dir
-    outdir = f"outputs/{task_name}_{method}/sims_{num_simulations}"
+    outdir = f"outputs/{task_name}_{method}_Solution/sims_{num_simulations}"
     os.makedirs(outdir, exist_ok=True)
     pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
     print(f"Saved metrics for all observations to {os.path.join(outdir, 'metrics.csv')}")
