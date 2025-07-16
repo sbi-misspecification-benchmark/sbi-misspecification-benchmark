@@ -5,13 +5,17 @@ The benchmark uses a hierarchical configuration system with these main component
 
 ```
 configs/
-├── main.yaml          # Primary configuration file
-├── task/              # Task-specific configurations
+├── main.yaml                 # Primary configuration file
+├── task/                     # Task-specific configurations
 │   └── misspecified_likelihood.yaml
-└── inference/         # Inference method configurations
-    ├── npe.yaml       # Neural Posterior Estimation
-    ├── nle.yaml       # Neural Likelihood Estimation
-    └── nre.yaml       # Neural Ratio Estimation
+├── inference/                # Inference method configurations
+│   ├── npe.yaml              # Neural Posterior Estimation
+│   ├── nle.yaml              # Neural Likelihood Estimation
+│   └── nre.yaml              # Neural Ratio Estimation
+└── metric/                   # Evaluation metric configurations
+    ├── c2st.yaml             # Classifier Two-Sample Test
+    └── ppc.yaml              # Posterior Predictive Check
+
 ```
 
 ## Main Configuration (`main.yaml`)
@@ -20,8 +24,18 @@ configs/
 
 | Parameter | Description | Type | Default |
 |-----------|-------------|------|---------|
-| `defaults` | Specifies which configuration files to inherit from | List | `[task: misspecified_likelihood, inference: npe]` | 
+| `defaults` | Specifies which configuration files to inherit from | List | `[task: misspecified_likelihood, inference: npe, metric: c2st]` | 
 | `random_seed` | Seed for all random number generators | Integer | 42 |
+|`hydra.mode`|Execution mode: `RUN` for single run, `MULTIRUN` for sweeping combinations|String|MULTIRUN|
+|`hydra.sweeper.params`|enables multirun with different num_simulations| Dict   | `inference.num_simulations: ${inference.num_simulations}`              |
+
+### Behavior of `hydra.mode: MULTIRUN`
+
+| `inference.num_simulations` value | Behavior                          | Outcome                                  |
+|----------------------------------|-----------------------------------|------------------------------------------|
+| `100`                            | Single value                      | One run executed                         |
+| `100, 1000`                    |  comma-separated values                   | Two runs executed with separate outputs  |
+### Note: use MULTIRUN as default, since RUN leads to an error if there are two or more values for num_simulations
 
 Example:
 ```yaml
@@ -31,6 +45,11 @@ defaults:
   - _self_
 
 random_seed: 42
+hydra:
+ mode: MULTIRUN
+ sweeper:
+    params:
+      inference.num_simulations: ${inference.num_simulations}
 ```
 
 ## Task Configuration (`task/misspecified_likelihood.yaml`)
@@ -61,7 +80,7 @@ task:
 | Parameter | Description | Type | Default       |
 |-----------|-------------|------|---------------|
 | `inference.method` | Algorithm for simulation-based inference | String | NPE, NLE, NRE |
-| `inference.num_simulations` | Number of simulated datasets for training | Integer | 100 - 1000    |
+| `inference.num_simulations` | Number of simulated datasets for training | Integer or comma-separated string | 100-1000  |
 | `inference.num_observations` | Number of test observations to evaluate | Integer | 10            |
 | `inference.num_posterior_samples` | Samples drawn per posterior distribution  | Integer | 100           |
 
@@ -74,24 +93,17 @@ Example (NPE):
 ```yaml
 inference:
   method: npe
-  num_simulations: 100    # More simulations = better accuracy
+  num_simulations: 100,1000    # More simulations = better accuracy; comparison of accuracy between different values
   num_observations: 10     # Test on 10 different observations
   num_posterior_samples: 100  # More samples = smoother posteriors
 ```
 
 ## Execution Examples
-
-### Basic Usage
+Simply launch the benchmark with the following command
+### Usage
 ```bash
 python -m src.run --config-path configs --config-name main
 ```
 
-### Advanced Scenarios
-```bash
-# Multirun with different simulation budgets
-python -m src.run --multirun inference.inference.num_simulations=100,500,1000
 
-# Change inference method
-python -m src.run --config-path configs --config-name main inference=nle
-```
 
