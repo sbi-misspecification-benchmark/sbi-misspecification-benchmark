@@ -8,22 +8,14 @@ We want to use the top level script run.py as an entry point to launch the entir
 
 ###  Basic Usage
 
-To run a single benchmark with default settings:
+To run the benchmark with default settings:
 
 ```bash
 python -m src.run --config-path configs --config-name main
 ```
 This will use configs/main.yaml to configure the task, inference method, number of simulations, and other parameters.
 
-### Multirun
-In order to launch multiple experiments, you can use Hydra’s --multirun mode
-```bash
-python -m src.run --multirun \
-  inference=npe,nle \
-  metric=c2st,ppc \
-  inference.num_simulations=100,200
-```
-This command launches 8 runs (2 inference methods × 2 metrics × 2 simulation counts), each with a separate output directory under outputs/
+
 
 
 ## Structure
@@ -43,13 +35,43 @@ calling run_inference(...) to generate posteriors and saving them
 evaluating results with evaluate_inference(...)
 
 ### Output structure
+the benchmark produces two types of outputs:
+## 1.
+posterior samples and the config used for each observation
 ```bash
 outputs/
-└── <TaskName>_<Method>/
+└── <TaskClassName>_<Method>/
     └── sims_<NumSimulations>/
         └── obs_<Index>/
             ├── posterior_samples.pt
             └── config_used.yaml
+
+outputs/LikelihoodMisspecifiedTask_NPE/
+└── sims_100/
+    ├── obs_0/
+    │   ├── posterior_samples.pt
+    │   └── config_used.yaml
+    ├── obs_1/
+    │   ├── posterior_samples.pt
+    │   └── config_used.yaml
+    ...
+
+
+
+```
+## 2.
+a metrics.csv file that accumulates evaluation scores across all observations for a given number of simulations.
+```bash
+outputs/
+└── <ConfigTaskName>_<Method>_Solution/
+    └── sims_<NumSimulations>/
+        └── metrics.csv
+outputs/misspecified_likelihood_NPE_Solution/
+└── sims_100/
+    └── metrics.csv
+
+
+
 ```
 
 
