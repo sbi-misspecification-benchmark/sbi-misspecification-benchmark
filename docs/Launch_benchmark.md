@@ -13,7 +13,7 @@ To run the benchmark with default settings:
 ```bash
 python -m src.run --config-path configs --config-name main
 ```
-This will use configs/main.yaml to configure the task, inference method, number of simulations, and other parameters.
+This will use configs/main.yaml to configure the task, inference method, metric and random seed.
 
 
 
@@ -36,7 +36,7 @@ evaluating results with evaluate_inference(...)
 
 ### Output structure
 the benchmark produces two types of outputs:
-## 1.
+## 1. function defined in Run_inference.py
 posterior samples and the config used for each observation
 ```bash
 outputs/
@@ -45,6 +45,9 @@ outputs/
         └── obs_<Index>/
             ├── posterior_samples.pt
             └── config_used.yaml
+```
+e.g.
+```bash
 
 outputs/LikelihoodMisspecifiedTask_NPE/
 └── sims_100/
@@ -57,21 +60,23 @@ outputs/LikelihoodMisspecifiedTask_NPE/
     ...
 
 
-
 ```
-## 2.
+## 2. function defined in run_benchmark.py
 a metrics.csv file that accumulates evaluation scores across all observations for a given number of simulations.
 ```bash
 outputs/
 └── <ConfigTaskName>_<Method>_Solution/
     └── sims_<NumSimulations>/
         └── metrics.csv
+```
+e.g.
+```bash
+
 outputs/misspecified_likelihood_NPE_Solution/
 └── sims_100/
     └── metrics.csv
-
-
-
 ```
+
+
 
 
