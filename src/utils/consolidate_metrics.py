@@ -1,15 +1,11 @@
 """
-consolidate_metrics
+Consolidate all 'metrics.csv' files (of the same task and method) across simulations into a single DataFrame.
 
-Combine `metrics.csv` files under a given input dir into a single CSV and save it at a given output file.
-
-The script will:
-    1. Glob for `sims_*/obs_*/metrics.csv` under `input_dir`
-    2. Read each file into a DataFrame
-    3. Concatenate them into one combined DataFrame
-    4. Validate columns
-    5. Write the result to `output_file`
-
+This will:
+1. Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
+2. Read and concatenate them into a single DataFrame.
+3. Validate and reorder columns.
+4. Write the resulting DataFrame to 'output_file' as a .csv file, then return it.
 
 Usage:
     python consolidate_metrics.py --input_dir <base_directory> --output_file <metrics_all.csv>
@@ -20,59 +16,64 @@ from pathlib import Path
 import sys
 
 import pandas as pd
-from src.utils.csv_utils import gather_csv_files, read_csv_files
+from src.utils.csv_utils import gather_csv_files, read_csv_files, ensure_columns
 
 
 def parse_args():
     """Parse and return command-line arguments."""
     p = argparse.ArgumentParser(
-        description="Combine all metrics.csv into one CSV."
+        description="Consolidate all 'metrics.csv' files (of the same task and method) across simulations into a "
+                    "single DataFrame."
     )
     p.add_argument(
         "--input_dir",
         type=Path,
         required=True,
-        help="Base directory containing sims_*/obs_*/metrics.csv"
+        help="Base directory containing sims_*/metrics.csv files to consolidate"
     )
     p.add_argument(
         "--output_file",
         type=Path,
         required=True,
-        help="Path to write the combined CSV (e.g. metrics_all.csv)"
+        help="File path where to write the consolidated .csv file (e.g. metrics_all.csv)"
     )
     return p.parse_args()
 
 
 def consolidate(input_dir: Path, output_file: Path) -> pd.DataFrame:
     """
-    Glob all 'metrics.csv' files under `input_dir`, concatenate them into a single DataFrame,
-    write that DataFrame to `output_file`, and return it.
+    Consolidate 'metrics.csv' files (of the same task and method) across simulations into one DataFrame.
+
+    1. Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
+    2. Read and concatenate them into a single DataFrame.
+    3. Validate and reorder columns.
+    4. Write the resulting DataFrame to 'output_file' as a .csv file, then return it.
 
     Args:
-        input_dir: Base directory under which to glob for sims_*/obs_*/metrics.csv
-        output_file: Where to write the combined CSV
+        input_dir: Base directory under which to glob for sims_*/metrics.csv
+        output_file: File path where to write the consolidated .csv file.
 
     Returns:
-        The concatenated DataFrame.
+        The consolidated DataFrame.
 
     Raises:
-        FileNotFoundError: If no metrics.csv files are found.
-        ValueError: If base fieldnames are missing/mis-ordered or contain missing values.
+        FileNotFoundError: If no metrics.csv files can be read or found.
+        ValueError: If base fieldnames are missing or contain missing values.
     """
-    # 1) gather metrics.csv files
-    pattern = input_dir / "sims_*" / "obs_*" / "metrics.csv"
-    csv_paths = gather_csv_files(data_sources=str(pattern), base_directory=input_dir)
+    # 1) Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
+    csv_paths = gather_csv_files(data_sources="sims_*/metrics.csv", base_directory=input_dir)
     if not csv_paths:
         raise FileNotFoundError(f"No metrics.csv under {input_dir!r}")
 
-    # 2) read all .csv files
+    # 2) Read all .csv files
     frames = read_csv_files(csv_paths)
+    if not frames:
+        raise FileNotFoundError(f"Failed to read any CSVs from: {csv_paths!r}")
 
-    # 3) concatenate into one combined dataframe
+    # 3) Concatenate frames into one combined DataFrame
     combined = pd.concat(frames, ignore_index=True)
 
-    # 4) Validate columns
-    # 4a) Assert the base fieldnames exist and metadata columns are sorted
+    # 4) Validate and reorder columns
     base_fieldnames = [
         "metric",
         "value",
@@ -81,29 +82,10 @@ def consolidate(input_dir: Path, output_file: Path) -> pd.DataFrame:
         "num_simulations",
         "observation_idx",
     ]
-    # Required columns must all be present, in that order
-    cols = list(combined.columns)
-    if cols[: len(base_fieldnames)] != base_fieldnames:
-        raise ValueError(
-            f"Wrong CSV structure: expected first columns {base_fieldnames!r}, "
-            f"but got {cols[: len(base_fieldnames)]!r}"
-        )
 
-    # Any extra (metadata) cols must come after and sorted lexicographically
-    extra = cols[len(base_fieldnames):]
-    if extra != sorted(extra):
-        raise ValueError(
-            f"Unexpected or mis-ordered metadata columns: {extra!r}. "
-            f"Should be sorted."
-        )
+    combined = ensure_columns(combined, base_fieldnames)
 
-    # 4b) Assert none of the base fieldnames columns contain missing values
-    required = ["metric", "value", "task", "method", "num_simulations", "observation_idx"]
-    missing = combined[required].isnull().sum()
-    if missing.any():
-        raise ValueError(f"Missing data in required columns:\n{missing[missing > 0]}")
-
-    # 5) write out
+    # 5) Write out at given output directory 'output_file'
     combined.to_csv(output_file, index=False)
 
     return combined
