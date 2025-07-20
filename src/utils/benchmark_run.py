@@ -1,38 +1,16 @@
 import random
 import torch
+import os
+import pandas as pd
 
 from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
-
-# Define a dummy task class
-class DummyTask2():
-    def get_prior(self):
-        return torch.distributions.MultivariateNormal(
-            loc=torch.zeros(2), covariance_matrix=torch.eye(2)
-        )
-    def get_reference_posterior_samples(self, idx):
-        return torch.ones(100, 2)  # Fake samples
-
-    def get_simulator(self):
-        return lambda theta: theta + torch.randn_like(theta)
-
-    def get_observation(self, idx=0):
-        return torch.tensor([0.5, 0.5])
-
-
 # Task registry to hold all available task classes
 task_registry = {
-    "test_task": DummyTask2,
     "misspecified_likelihood": LikelihoodMisspecifiedTask,
 }
-
-def validate_positive(value, default_value):
-    """Ensure a configuration value is non-negative, otherwise use the default."""
-    if value is None or value < 0:
-        return default_value
-    return value
 
 def run_benchmark(config):
     random_seed = config.get('random_seed')
@@ -55,7 +33,6 @@ def run_benchmark(config):
     print(
         f"\n Running {method} on task {task_name} with {num_simulations} simulations and {num_observations} observations\n")
 
-
     run_inference(
         task=task,
         method_name=method,
@@ -66,12 +43,47 @@ def run_benchmark(config):
         config=config
     )
 
-    # Evaluation
-    metric_name = config.metric.name
-    evaluate_inference(
-        task=task,
-        method_name=method,
-        metric_name=metric_name,
-        num_observations=num_observations,
-        num_simulations=num_simulations,
-    )
+    # Determine which metrics to compute based on config
+    metric_config = config.metric.name
+    compute_c2st = metric_config in ["c2st", "c2st_ppc"]
+    compute_ppc = metric_config in ["ppc", "c2st_ppc"]
+
+    # Evaluation: collect all metrics for all obs, save one metrics.csv
+    all_metrics = []
+    for obs_idx in range(num_observations):
+        metrics_dict = {
+            "obs_idx": obs_idx,
+            "task": task_name,
+            "method": method,
+        }
+
+        if compute_c2st:
+            c2st_score = evaluate_inference(
+                task=task,
+                method_name=method,
+                metric_name="c2st",
+                num_observations=1,
+                num_simulations=num_simulations,
+                obs_offset=obs_idx
+            )
+            metrics_dict["c2st"] = c2st_score
+
+        if compute_ppc:
+            ppc_score = evaluate_inference(
+                task=task,
+                method_name=method,
+                metric_name="ppc",
+                num_observations=1,
+                num_simulations=num_simulations,
+                obs_offset=obs_idx
+            )
+            metrics_dict["ppc"] = ppc_score
+
+        all_metrics.append(metrics_dict)
+
+    # Save metrics.csv
+    task_class_name = task.__class__.__name__
+    outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
+    os.makedirs(outdir, exist_ok=True)
+    pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
+    print(f"Saved metrics to {os.path.join(outdir, 'metrics.csv')}")
