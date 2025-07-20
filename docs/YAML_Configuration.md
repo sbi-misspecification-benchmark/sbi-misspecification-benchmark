@@ -5,32 +5,52 @@ The benchmark uses a hierarchical configuration system with these main component
 
 ```
 configs/
-├── main.yaml          # Primary configuration file
-├── task/              # Task-specific configurations
+├── main.yaml                 # Primary configuration file
+├── task/                     # Task-specific configurations
 │   └── misspecified_likelihood.yaml
-└── inference/         # Inference method configurations
-    ├── npe.yaml       # Neural Posterior Estimation
-    ├── nle.yaml       # Neural Likelihood Estimation
-    └── nre.yaml       # Neural Ratio Estimation
+├── inference/                # Inference method configurations
+│   ├── npe.yaml              # Neural Posterior Estimation
+│   ├── nle.yaml              # Neural Likelihood Estimation
+│   └── nre.yaml              # Neural Ratio Estimation
+└── metric/                   # Evaluation metric configurations
+    ├── c2st.yaml             # Classifier Two-Sample Test
+    ├── ppc.yaml              # Posterior Predictive Check
+    └── c2st_ppc.yaml         # Runs both C2ST and PPC evaluations in a single execution
 ```
 
 ## Main Configuration (`main.yaml`)
 
 ### Core Parameters
 
-| Parameter | Description | Type | Default |
-|-----------|-------------|------|---------|
-| `defaults` | Specifies which configuration files to inherit from | List | `[task: misspecified_likelihood, inference: npe]` | 
-| `random_seed` | Seed for all random number generators | Integer | 42 |
+| Parameter              | Description                                                                                            | Type    | Default                                                         |
+|------------------------|--------------------------------------------------------------------------------------------------------|---------|-----------------------------------------------------------------|
+| `defaults`             | Specifies which configuration files to inherit from                                                    | List    | `[task: misspecified_likelihood, inference: npe, metric: c2st]` |
+| `random_seed`          | Seed for all random number generators                                                                  | Integer | 42                                                              |
+| `hydra.mode`           | Execution mode: `RUN` for single run, `MULTIRUN` for sweeping combinations                             | String  | MULTIRUN                                                        |
+| `hydra.sweeper.params` | Enables multirun with different num_simulations                                                        | Dict    | `inference.num_simulations: ${inference.num_simulations}`       |
+
+### Behavior of `hydra.mode: MULTIRUN`
+
+| `inference.num_simulations` value | Behavior                          | Outcome                                  |
+|----------------------------------|-----------------------------------|------------------------------------------|
+| `100`                            | Single value                      | One run executed                         |
+| `100, 1000`                    |  comma-separated values                   | Two runs executed with separate outputs  |
+### Note: use MULTIRUN as default, since RUN leads to an error if there are two or more values for num_simulations
 
 Example:
 ```yaml
 defaults:
   - task: misspecified_likelihood
   - inference: npe
+  - metric: c2st
   - _self_
 
 random_seed: 42
+hydra:
+ mode: MULTIRUN
+ sweeper:
+    params:
+      inference.num_simulations: ${inference.num_simulations}
 ```
 
 ## Task Configuration (`task/misspecified_likelihood.yaml`)
@@ -61,7 +81,7 @@ task:
 | Parameter | Description | Type | Default       |
 |-----------|-------------|------|---------------|
 | `inference.method` | Algorithm for simulation-based inference | String | NPE, NLE, NRE |
-| `inference.num_simulations` | Number of simulated datasets for training | Integer | 100 - 1000    |
+| `inference.num_simulations` | Number of simulated datasets for training | Integer or comma-separated string | 100-1000  |
 | `inference.num_observations` | Number of test observations to evaluate | Integer | 10            |
 | `inference.num_posterior_samples` | Samples drawn per posterior distribution  | Integer | 100           |
 
@@ -74,24 +94,50 @@ Example (NPE):
 ```yaml
 inference:
   method: npe
-  num_simulations: 100    # More simulations = better accuracy
+  num_simulations: 100,1000    # More simulations = better accuracy; comparison of accuracy between different values
   num_observations: 10     # Test on 10 different observations
   num_posterior_samples: 100  # More samples = smoother posteriors
 ```
 
-## Execution Examples
+## Metric Configuration
 
-### Basic Usage
+## Metrics Selection Options
+
+| Configuration	    | Behavior                              | Output CSV Columns          |
+|-------------------|------------------------------------------|-------------------------------|
+| metric: c2st      | Computes only Classifier Two-Sample Test | obs_idx,task,method,c2st      |
+| metric: ppc       | Computes only Posterior Predictive Check | obs_idx,task,method,ppc       |
+| metric: c2st_ppc  | Computes both metrics                    | obs_idx,task,method,c2st,ppc |
+
+Two evaluation metrics available:
+* **c2st**: Measures how well the inferred posterior matches the true posterior (0.5=perfect, 1.0=wrong)
+* **ppc**: Evaluates how well posterior samples reproduce the observed data (lower=better)
+
+## Execution Examples
+Simply launch the benchmark with the following command
+### Usage
 ```bash
 python -m src.run --config-path configs --config-name main
 ```
-
-### Advanced Scenarios
+Single metric runs:
 ```bash
-# Multirun with different simulation budgets
-python -m src.run --multirun inference.inference.num_simulations=100,500,1000
+# C2ST only
+python -m src.run metric=c2st
 
-# Change inference method
-python -m src.run --config-path configs --config-name main inference=nle
+# PPC only
+python -m src.run metric=ppc
+
+# Both metrics
+python -m src.run metric=c2st_ppc
 ```
+Multirun with all metric options:
+```bash
+python -m src.run --multirun metric=c2st,ppc,c2st_ppc
+```
+Multirun with all metrics and inference options
+```bash
+python -m src.run --multirun inference=npe,nle,nre   metric=c2st,ppc,c2st_ppc  
+```
+
+
 
