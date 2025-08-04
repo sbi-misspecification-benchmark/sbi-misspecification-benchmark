@@ -43,28 +43,47 @@ def run_benchmark(config):
         config=config
     )
 
+    # Determine which metrics to compute based on config
+    metric_config = config.metric.name
+    compute_c2st = metric_config in ["c2st", "c2st_ppc"]
+    compute_ppc = metric_config in ["ppc", "c2st_ppc"]
+
     # Evaluation: collect all metrics for all obs, save one metrics.csv
-    metric_name = config.metric.name
     all_metrics = []
     for obs_idx in range(num_observations):
-        score = evaluate_inference(
-            task=task,
-            method_name=method,
-            metric_name=metric_name,
-            num_observations=1,
-            num_simulations=num_simulations,
-            obs_offset=obs_idx
-        )
-        all_metrics.append({
+        metrics_dict = {
             "obs_idx": obs_idx,
             "task": task_name,
             "method": method,
-            "metric": metric_name,
-            "score": score
-        })
-    # Save metrics.csv in sims_{num_simulations} dir using class name
+        }
+
+        if compute_c2st:
+            c2st_score = evaluate_inference(
+                task=task,
+                method_name=method,
+                metric_name="c2st",
+                num_observations=1,
+                num_simulations=num_simulations,
+                obs_offset=obs_idx
+            )
+            metrics_dict["c2st"] = c2st_score
+
+        if compute_ppc:
+            ppc_score = evaluate_inference(
+                task=task,
+                method_name=method,
+                metric_name="ppc",
+                num_observations=1,
+                num_simulations=num_simulations,
+                obs_offset=obs_idx
+            )
+            metrics_dict["ppc"] = ppc_score
+
+        all_metrics.append(metrics_dict)
+
+    # Save metrics.csv
     task_class_name = task.__class__.__name__
     outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
     os.makedirs(outdir, exist_ok=True)
     pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
-    print(f"Saved metrics for all observations to {os.path.join(outdir, 'metrics.csv')}")
+    print(f"Saved metrics to {os.path.join(outdir, 'metrics.csv')}")

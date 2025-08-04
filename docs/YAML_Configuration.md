@@ -14,20 +14,20 @@ configs/
 │   └── nre.yaml              # Neural Ratio Estimation
 └── metric/                   # Evaluation metric configurations
     ├── c2st.yaml             # Classifier Two-Sample Test
-    └── ppc.yaml              # Posterior Predictive Check
-
+    ├── ppc.yaml              # Posterior Predictive Check
+    └── c2st_ppc.yaml         # Runs both C2ST and PPC evaluations in a single execution
 ```
 
 ## Main Configuration (`main.yaml`)
 
 ### Core Parameters
 
-| Parameter | Description | Type | Default |
-|-----------|-------------|------|---------|
-| `defaults` | Specifies which configuration files to inherit from | List | `[task: misspecified_likelihood, inference: npe, metric: c2st]` | 
-| `random_seed` | Seed for all random number generators | Integer | 42 |
-|`hydra.mode`|Execution mode: `RUN` for single run, `MULTIRUN` for sweeping combinations|String|MULTIRUN|
-|`hydra.sweeper.params`|enables multirun with different num_simulations| Dict   | `inference.num_simulations: ${inference.num_simulations}`              |
+| Parameter              | Description                                                                                            | Type    | Default                                                         |
+|------------------------|--------------------------------------------------------------------------------------------------------|---------|-----------------------------------------------------------------|
+| `defaults`             | Specifies which configuration files to inherit from                                                    | List    | `[task: misspecified_likelihood, inference: npe, metric: c2st]` |
+| `random_seed`          | Seed for all random number generators                                                                  | Integer | 42                                                              |
+| `hydra.mode`           | Execution mode: `RUN` for single run, `MULTIRUN` for sweeping combinations                             | String  | MULTIRUN                                                        |
+| `hydra.sweeper.params` | Enables multirun with different num_simulations                                                        | Dict    | `inference.num_simulations: ${inference.num_simulations}`       |
 
 ### Behavior of `hydra.mode: MULTIRUN`
 
@@ -42,6 +42,7 @@ Example:
 defaults:
   - task: misspecified_likelihood
   - inference: npe
+  - metric: c2st
   - _self_
 
 random_seed: 42
@@ -98,11 +99,44 @@ inference:
   num_posterior_samples: 100  # More samples = smoother posteriors
 ```
 
+## Metric Configuration
+
+## Metrics Selection Options
+
+| Configuration	    | Behavior                              | Output CSV Columns          |
+|-------------------|------------------------------------------|-------------------------------|
+| metric: c2st      | Computes only Classifier Two-Sample Test | obs_idx,task,method,c2st      |
+| metric: ppc       | Computes only Posterior Predictive Check | obs_idx,task,method,ppc       |
+| metric: c2st_ppc  | Computes both metrics                    | obs_idx,task,method,c2st,ppc |
+
+Two evaluation metrics available:
+* **c2st**: Measures how well the inferred posterior matches the true posterior (0.5=perfect, 1.0=wrong)
+* **ppc**: Evaluates how well posterior samples reproduce the observed data (lower=better)
+
 ## Execution Examples
 Simply launch the benchmark with the following command
 ### Usage
 ```bash
 python -m src.run --config-path configs --config-name main
+```
+Single metric runs:
+```bash
+# C2ST only
+python -m src.run metric=c2st
+
+# PPC only
+python -m src.run metric=ppc
+
+# Both metrics
+python -m src.run metric=c2st_ppc
+```
+Multirun with all metric options:
+```bash
+python -m src.run --multirun metric=c2st,ppc,c2st_ppc
+```
+Multirun with all metrics and inference options
+```bash
+python -m src.run --multirun inference=npe,nle,nre   metric=c2st,ppc,c2st_ppc  
 ```
 
 
