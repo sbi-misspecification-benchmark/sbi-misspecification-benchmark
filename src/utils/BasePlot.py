@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from src.utils.file_utils import ensure_directory, unique_path
-from src.utils.csv_utils import gather_csv_files, read_csv_files
+from src.utils.csv_utils import gather_csv_files, read_csv_files, ensure_columns
 
 
 class BasePlot(ABC):
     """
-    BasePlot handles loading .csv files and saving figures; subclasses implement the plotting logic.
+    BasePlot handles loading CSV files and saving figures; subclasses implement the plotting logic.
 
     Args:
-        data_sources (str | Path | list[str|Path]): Sources to gather benchmark results from.
-        base_directory (str | Path, optional): Absolute root directory for loading and saving; defaults to cwd.
+        data_sources (str | Path | list[str|Path]): Sources to gather benchmark results from (e.g.: metrics.csv)
+        base_directory (str | Path, optional): Root directory for loading and saving; defaults to cwd.
         filename (str, optional): Custom output filename (stem or with extension).
             Defaults to "<ClassName>.png" where ClassName is the name of the subclass.
         **plot_kwargs: Passed to plotting calls in subclass, e.g. {"marker": "o", "linestyle": "--"}.
@@ -49,11 +49,9 @@ class BasePlot(ABC):
 
         # Normalize base_directory to an absolute Path
         if base_directory is None:
-            bd = Path.cwd()
+            bd = Path.cwd().resolve()
         else:
-            bd = Path(base_directory)
-            if not bd.is_absolute():
-                raise ValueError(f"base_directory must be absolute, got {base_directory!r}")
+            bd = Path(base_directory).resolve()
 
         self.base_directory = bd  # absolute Path
         self.filename = filename
@@ -72,52 +70,64 @@ class BasePlot(ABC):
 
     def run(self) -> Path:
         """
-        Run the full pipeline: load data, create the plot, save the figure and return the save path.
+        Run the full pipeline: load the data, create the plot, save the figure and return the save path.
 
         Use run() for the standard end-to-end flow. If you need to customize the plot before saving, do:
             >>> plotter = BasePlot(...)
             >>> df = plotter.load_data()
             >>> fig, axes = plotter.plot(df)
             >>> # CUSTOMIZATION, e.g.:
-            >>> axes[0].set_title("Custom Title")
+            >>> axes[0].set_title("Custom Title") # etc.
             >>> save_path = plotter.save(fig)
 
         Returns:
             Path: The save path to the plotted figure.
         """
         df = self.load_data()
-        fig, ax = self.plot(df)
+        fig, axes = self.plot(df)
         save_path = self.save(fig)
         return save_path
 
 
     def load_data(self) -> pd.DataFrame:
         """
-        Load .csv files from self.data_sources as a pd.DataFrame and concatenate them into one combined pd.DataFrame.
+        Load CSV files from self.data_sources as a pd.DataFrame and concatenate them into one combined pd.DataFrame.
 
         Returns:
-            pd.DataFrame: The combined DataFrame of all successfully read .csv files.
+            pd.DataFrame: The combined DataFrame of all successfully read CSV files.
 
         Raises:
             FileNotFoundError: If no CSV files are found for the given data_sources.
             ValueError: If CSV files are found but all reads fail.
         """
-        # Gather all CSV file paths matching the data_sources (file, dir, or glob under base_directory)
+        # Gather all CSV files from the data_sources
         csv_paths = gather_csv_files(data_sources=self.data_sources, base_directory=self.base_directory)
         if not csv_paths:
             raise FileNotFoundError(f"No CSV files found for any of {self.data_sources!r}")
 
-        # Read each CSV into a single dataframe, tagging with "__source__"
-        dataframes = read_csv_files(csv_paths)
-        if not dataframes:
+        # Read each CSV file into a single DataFrame
+        frames = read_csv_files(csv_paths)
+        if not frames:
             raise ValueError(f"All CSV reads failed for {self.data_sources!r}")
 
-        # Concatenate into one combined dataframe
-        combined = pd.concat(dataframes, ignore_index=True)
+        # Concatenate frames into one combined DataFrame
+        combined = pd.concat(frames, ignore_index=True)
         self.data = combined  # update self.data attribute for future potential use
 
+        # 4) Validate and reorder columns
+        base_fieldnames = [
+            "metric",
+            "value",
+            "task",
+            "method",
+            "num_simulations",
+            "observation_idx",
+        ]
+
+        combined = ensure_columns(combined, base_fieldnames)
+
         # Report how many rows/files were loaded
-        print(f"Loaded {len(combined)} rows from {len(dataframes)} files.")
+        print(f"Loaded {len(combined)} rows from {len(frames)} files.")
         return combined
 
 
@@ -132,16 +142,15 @@ class BasePlot(ABC):
             Tuple[plt.Figure, List[plt.Axes]]: The Figure object and a flat list of Axes.
         """
         # Call Subclass logic for plotting
-        fig, axes_list = self._plot(df, **self.plot_kwargs)
+        fig, axes = self._plot(df)
 
         # store attributes
         self.fig = fig
-        self.axes = axes_list
-        return fig, axes_list
+        self.axes = axes
+        return fig, axes
 
 
     def save(self, fig: plt.Figure) -> Path:
-
         # Determine the save path:
         if self.filename:
             stem = Path(self.filename).stem  # Gets the stem, regardless of whether the filename had an extension or not
@@ -162,7 +171,7 @@ class BasePlot(ABC):
 
 
         # Save the figure to the save path and close it
-        fig.savefig(save_path)
+        fig.savefig(save_path, dpi=300)
         plt.close(fig)
         self.save_path = save_path
 
@@ -173,9 +182,9 @@ class BasePlot(ABC):
 
 
     @abstractmethod
-    def _plot(self, df: pd.DataFrame, **plot_kwargs) -> Tuple[plt.Figure, List[plt.Axes]]:
+    def _plot(self, df: pd.DataFrame) -> Tuple[plt.Figure, List[plt.Axes]]:
         """
-        Subclasses implement plotting here, using df and plot_kwargs (styling).
-        Must return (fig, axes_list), where axes_list is a flat list of Axes.
+        Subclasses implement plotting logic here.
+        Must return (fig, axes), where axes is a flat list of Axes.
         """
         ...

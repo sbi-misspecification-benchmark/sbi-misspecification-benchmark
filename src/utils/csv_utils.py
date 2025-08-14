@@ -151,8 +151,7 @@ def gather_csv_files(
 
 def read_csv_files(paths: List[Path]) -> list[pd.DataFrame]:
     """
-    Read each CSV file in `paths` into a pandas DataFrame, tag with a "__source__" column,
-    and return the list of DataFrames.
+    Read each .csv file in `paths` into a pandas DataFrame, and return the list of DataFrames.
 
     Args:
         paths (List[Path]): List of absolute .csv file paths.
@@ -160,14 +159,58 @@ def read_csv_files(paths: List[Path]) -> list[pd.DataFrame]:
     Returns:
         List[pd.DataFrame]: A list of DataFrames for each CSV successfully read.
             If reading a file fails, that file is skipped; the returned list may be empty.
-
     """
     frames: list[pd.DataFrame] = []
     for path in sorted(paths):
         try:
             df = pd.read_csv(path)
-            df["__source__"] = str(path.resolve())
             frames.append(df)
         except Exception as e:
             print(f"Failed to read {path!r}: {e}")
     return frames
+
+
+def ensure_columns(
+        df: pd.DataFrame,
+        required_columns: Sequence[str],
+        *,
+        sort_extra: bool = True
+) -> pd.DataFrame:
+    """
+    Validate and reorder columns of DataFrame 'df'.
+
+    Ensure all 'required_columns' exist in 'df' and do not contain missing values.
+    Optionally sort any extra columns beyond the 'required_columns'.
+    Return a new DataFrame with columns ordered as: [*required_columns, *extra_columns].
+
+    Args:
+        df (pd.DataFrame): The DataFrame to validate and reorder.
+        required_columns (Sequence[str]): Names of columns that must exist and cannot contain missing values.
+        sort_extra (bool): If True, any extra columns (beyond the 'required_columns') will be sorted lexicographically.
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the validated and reordered columns.
+
+    Raises:
+        ValueError: If any 'required_columns' are missing or contain missing values.
+    """
+    # Ensure all required columns exist
+    missing_cols = [col for col in required_columns if col not in df.columns]
+    if missing_cols:
+        raise ValueError(f"Missing required columns: {missing_cols}")
+
+    # Ensure no required column has missing values (NaNs)
+    missing_value_cols = [col for col in required_columns if df[col].isnull().any()]
+    if missing_value_cols:
+        raise ValueError(f"Required columns contain missing values: {missing_value_cols}")
+
+    # Identify extra columns beyond the required columns, and optionally sort them lexicographically
+    extra_columns = [col for col in df.columns if col not in required_columns]
+    if sort_extra:
+        extra_columns.sort()
+
+    # Build column order and reindex the df to match it
+    column_order = list(required_columns) + extra_columns
+    ordered_df = df.reindex(columns=column_order)
+
+    return ordered_df
