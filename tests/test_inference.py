@@ -1,13 +1,6 @@
-# This script didn't run for me if I didnt set the KMP_DUPLICATE_LIB_OK environment variable
-# import os
-# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-
 import torch
 from sbi.inference import NPE
 from src.inference.Run_Inference import run_inference
-#from Base_Task import BaseTask
-
 
 class DummyTask():
     def get_prior(self):
@@ -23,14 +16,20 @@ class DummyTask():
     def get_reference_posterior_samples(self, idx):
         return torch.ones(100, 2)  # Fake samples
 
-
 def test_run_inference():
     task = DummyTask()
+    num_simulations = 200
+    num_posterior_samples = 50
+    num_observations = 10
     print("Im finished")
     for method_name in ["NPE", "NLE", "NRE"]:
-        samples = run_inference(task, method_name=method_name, num_simulations=200)
+        samples = run_inference(
+            task,
+            method_name=method_name,
+            num_simulations=num_simulations,
+            num_posterior_samples=num_posterior_samples,
+            num_observations=num_observations
+        )
 
         assert isinstance(samples, torch.Tensor)
-        assert samples.shape == (50, 2) # Adjusted to match num_posterior_samples in run_inference function
-
-
+        assert samples.shape == (num_posterior_samples, 2) # Adjusted to match num_posterior_samples in run_inference function
