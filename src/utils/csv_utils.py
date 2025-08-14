@@ -159,7 +159,6 @@ def read_csv_files(paths: List[Path]) -> list[pd.DataFrame]:
     Returns:
         List[pd.DataFrame]: A list of DataFrames for each CSV successfully read.
             If reading a file fails, that file is skipped; the returned list may be empty.
-
     """
     frames: list[pd.DataFrame] = []
     for path in sorted(paths):
