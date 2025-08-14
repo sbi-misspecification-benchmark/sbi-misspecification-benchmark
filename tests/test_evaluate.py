@@ -1,13 +1,11 @@
 import torch
 import os
 
-
 from Base_Task import BaseTask
 from src.inference.Run_Inference import run_inference
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 from src.evaluation.evaluate_inference import evaluate_inference
-
 
 class DummyTask(BaseTask):
     """
@@ -76,9 +74,9 @@ def test_run_inference_and_evaluate():
     metric = "c2st"
     seed = 86
 
-
     num_simulations = 100
     num_posterior_samples = 50
+    num_observations = 1
 
     # Run inference, samples are saved
     run_inference(
@@ -86,13 +84,13 @@ def test_run_inference_and_evaluate():
         method_name=method,
         num_simulations=num_simulations,
         seed=seed,
-        num_posterior_samples=num_posterior_samples
+        num_posterior_samples=num_posterior_samples,
+        num_observations=num_observations
     )
 
     # Evaluates inference, loads saved samples
-    score = evaluate_inference(task, method, metric_name=metric, num_observations=1)
+    score = evaluate_inference(task, method, metric_name=metric, num_observations=num_observations, num_simulations=num_simulations)
 
     # Checks if score is a float
     assert isinstance(score, float)
     assert 0.0 <= score <= 1.0
-

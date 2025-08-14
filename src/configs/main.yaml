@@ -1,11 +1,13 @@
 defaults:
-- task: misspecified_likelihood
-- inference: npe
-task:
-  name: misspecified_likelihood
-  tau_m: 0.2
-  lambda_val: 0.6
-inference:
-  method: NPE
-metrics: [c2st, ppc]
-random_seed: 42
+  - task: misspecified_likelihood
+  - inference: npe
+  - metric: c2st
+  - _self_
+
+random_seed: 86
+
+hydra:
+  mode: MULTIRUN
+  sweeper:
+    params:
+      inference.num_simulations: ${inference.num_simulations}
