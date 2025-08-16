@@ -3,7 +3,7 @@
 A task defines a prior distribution, a simulator (the generative model), how to fetch an observation, and optionally how to provide reference posterior samples for evaluation.
 
 
-## Implementation
+## Implementation and Example
 
 ### 1. Set up a Python file
 ### 1.1 Required Methods
@@ -25,12 +25,11 @@ provides ground-truth posterior samples if available.
 
 
 ### 1.2 Example 
-For better understanding on how to implemnt the required methods, take a look at the following example `src/tasks/my_task.py` or for a more complex implemention look at `src\tasks\misspecified_tasks.py` or `src\tasks\linear_gaussian_task.py`. 
+For better understanding on how to implemnt the required methods, take a look at the following example `src/tasks/my_task.py` or for a more complex implemention look at `src\tasks\misspecified_tasks.py` or `src\tasks\linear_gaussian_task.py`. This simple example uses a normal prior and simulates data by adding Gaussian noise.
 
-Example:    
-This simple example uses a normal prior and simulates data by adding Gaussian noise.
-
-<pre>import torch
+*Example: simple implementation with Gaussian noise*
+```python
+import torch
 import torch.distributions as D
 
 class MyTask():
@@ -41,7 +40,8 @@ class MyTask():
     def get_observation(self, idx):
         return torch.tensor([0.0])
     def get_reference_posterior_samples(self, idx):
-        return torch.randn(100, 1)</pre>
+        return torch.randn(100, 1)
+```
 
 
 
@@ -50,30 +50,37 @@ class MyTask():
 ### 2. Add a new Config File
 For it to be recognised by Hydra you then need to add a new .yaml config file `src/configs/task/my_task.yaml`, that follows the simple structure:
 
-Example:    
-<pre>name: my_task
+*Example: my_task.yaml*
+```yaml
+name: my_task
 mu: 2.0
-sigma: 1.0</pre> 
+sigma: 1.0
+```
 
-Note: Config keys are task-specific. Each task can define its own parameters (e.g., `tau_m`, `lambda_val` for the misspecified task, or `prior_mu`, `prior_sigma` for the provided example with Gaussian noise). Nevertheless the keys must match the arguments expected by the task's `__init__` method.
+**Note**: Config keys are task-specific. Each task can define its own parameters (e.g., `tau_m`, `lambda_val` for the misspecified task, or `prior_mu`, `prior_sigma` for the provided example with Gaussian noise). Nevertheless the keys must match the arguments expected by the task's `__init__` method.
 
 Now you can call the new task in the main config file `main.yaml`.   
 
-Example:
-<pre> defaults:
+*Example: Main Configuration*
+```yaml
+defaults:
   - task: my_task     # Call new task here
   - inference: npe
   - metric: c2st
-  - _self_</pre> 
+  - _self_
+  ``` 
 
 
 ### 3. Update the Registry
 For the runner to find and initaite the new task that is stated in the config, you have to add the new task to the task registry in `src\utils\benchmark_run.py`. The resulting dictionary should have the following stucture: 
 
-<pre>task_registry = {
+*Example: Task registry with new Task*
+```python
+task_registry = {
     "misspecified_likelihood": LikelihoodMisspecifiedTask,
     "my_task": MyTask,
-}</pre> 
+}
+```
 
 ## Expected Behavior
 - The runner will recognize the new task via Hydra.
