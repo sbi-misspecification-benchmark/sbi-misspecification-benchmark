@@ -4,11 +4,11 @@ An inference method specifies how posterior distributions are learned or approxi
 
 
 ## Implementation and Example
-### 1. Set up a Python file
+### 🐍 1. Set up a Python file
 In this project we only used the methods that are already implemented in the SBI tool. If you wanted to implement a new method, you can add a python file in `src\inference\methods`.
 
 
-### 2. Add a new Config File
+### 📜 2. Add a new Config File
 Add a new .yaml config file `src/configs/inference/mymethod.yaml` that specifies the parameters method, num_simulations, num_observations and num_posterior_samples. 
 
 *Example: mymethod.yaml*   
@@ -24,7 +24,7 @@ For a Hydra Multirun add multiple values (e.g. num_simlations: 500, 1000), for a
 
 
 
-### 3. Update the Registry
+### 📚 3. Update the Registry
 If you want to add another method from the SBI tool, register it in `src/inference/Run_Inference.py` inside the methods dictionary, so that the runner can find and call the new method. 
 
 *Example: Method Registry in Run_Inference.py with MyMethod*
@@ -39,6 +39,6 @@ The key is the config name. The value is the SBI method that performs inference.
 
 
 
-## Expected Behavior
+## 📈 Expected Behavior
 - run_inference will train the chosen method and save posterior_samples.pt files.
 - The config used for the run will be stored in the output folder for reproducibility.

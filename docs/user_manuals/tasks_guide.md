@@ -5,8 +5,8 @@ A task defines a prior distribution, a simulator (the generative model), how to 
 
 ## Implementation and Example
 
-### 1. Set up a Python file
-### 1.1 Required Methods
+### 🐍 1. Set up a Python file
+### ✅ 1.1 Required Methods
 All tasks must implement these methods:
 
 - *get_prior(self)*   
@@ -24,7 +24,7 @@ provides ground-truth posterior samples if available.
 
 
 
-### 1.2 Example 
+### 💡 1.2 Example 
 For better understanding on how to implemnt the required methods, take a look at the following example `src/tasks/my_task.py` or for a more complex implemention look at `src\tasks\misspecified_tasks.py` or `src\tasks\linear_gaussian_task.py`. This simple example uses a normal prior and simulates data by adding Gaussian noise.
 
 *Example: simple implementation with Gaussian noise*
@@ -47,7 +47,7 @@ class MyTask():
 
 
 
-### 2. Add a new Config File
+### 📜 2. Add a new Config File
 For it to be recognised by Hydra you then need to add a new .yaml config file `src/configs/task/my_task.yaml`, that follows the simple structure:
 
 *Example: my_task.yaml*
@@ -71,7 +71,7 @@ defaults:
   ``` 
 
 
-### 3. Update the Registry
+### 📚 3. Update the Registry
 For the runner to find and initaite the new task that is stated in the config, you have to add the new task to the task registry in `src\utils\benchmark_run.py`. The resulting dictionary should have the following stucture: 
 
 *Example: Task registry with new Task*
@@ -82,6 +82,6 @@ task_registry = {
 }
 ```
 
-## Expected Behavior
+## 📈 Expected Behavior
 - The runner will recognize the new task via Hydra.
 - Posterior samples and metrics will be saved under *outputs/*.
