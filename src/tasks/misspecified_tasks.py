@@ -74,8 +74,8 @@ class LikelihoodMisspecifiedTask:
     def __init__(
         self,
         dim: int = 2,
-        tau_m: float = 2.0,  # Misspecified likelihood variance
-        lambda_val: float = 0.5,  # Mixture weight
+        tau_m: float = 0.1,  # Misspecified likelihood variance
+        lambda_val: float = 0.1,  # Mixture weight
     ):
         """Initialize the Gaussian misspecified likelihood task.
 
