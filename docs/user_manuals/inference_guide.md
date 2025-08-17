@@ -22,6 +22,20 @@ num_posterior_samples: 100
 This config defines the method name and key parameters.   
 For a Hydra Multirun add multiple values (e.g. num_simlations: 500, 1000), for a Singlerun, you only need one value. 
 
+Now you can call the new metric in the main config file `main.yaml`.   
+
+*Example: Main.yaml Configuartion*
+```yaml
+defaults:
+  - task: misspecified_likelihood     
+  - inference: mymethod      # Call new method here
+  - metric: c2st       
+  - _self_
+  ```
+
+
+
+
 
 
 ### 📚 3. Update the Registry

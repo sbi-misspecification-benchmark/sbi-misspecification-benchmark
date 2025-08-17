@@ -35,7 +35,7 @@ name: mymetric
 
 Now you can call the new metric in the main config file `main.yaml`.   
 
-*Example: Main.yaml Configuartion*
+*Example: Main.yaml Configuration*
 ```yaml
 defaults:
   - task: misspecified_likelihood     
