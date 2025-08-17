@@ -5,9 +5,16 @@ defaults:
   - _self_
 
 random_seed: 86
+postprocess: true
 
 hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      inference.num_simulations: ${inference.num_simulations}
+      task: misspecified_likelihood,other_task
+      inference: npe,nle
+      inference.num_simulations: 100,1000
+
+  callbacks:
+    postprocess:
+      _target_: src.utils.postprocess_callback.PostProcessCallback

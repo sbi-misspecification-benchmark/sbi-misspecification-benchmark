@@ -16,7 +16,7 @@ plot2 = LinePlot(
 # Plot 3
 plot3 = LinePlot(
     data_sources="dummy_csv_6x8_grid_multimetrics.csv",
-    title="Dummy 6x8 Benchmark Grid",
+    title="Dummy 5x6 Benchmark Grid",
     row_order=["Task 3", "Task 2", "Task 1"],
     col_order=["Method 6", "Method 5", "Method 4", "Method 3", "Method 2", "Method 1"]
 )
