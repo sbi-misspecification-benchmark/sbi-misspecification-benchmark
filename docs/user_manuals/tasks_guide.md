@@ -61,7 +61,7 @@ sigma: 1.0
 
 Now you can call the new task in the main config file `main.yaml`.   
 
-*Example: Main Configuration*
+*Example: Main.yaml Configuration*
 ```yaml
 defaults:
   - task: my_task     # Call new task here
@@ -69,6 +69,7 @@ defaults:
   - metric: c2st
   - _self_
   ``` 
+For more information on how to configure the `main.yaml` to run the benchmark take a look at the `docs\YAML_Configuration.md`.
 
 
 ### 📚 3. Update the Registry
