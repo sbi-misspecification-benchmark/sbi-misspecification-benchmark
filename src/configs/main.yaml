@@ -11,9 +11,7 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
-      task: misspecified_likelihood,other_task
-      inference: npe,nle
-      inference.num_simulations: 100,1000
+      inference.num_simulations: ${inference.num_simulations}
 
   callbacks:
     postprocess:
