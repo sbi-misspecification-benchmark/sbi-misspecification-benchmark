@@ -2,6 +2,7 @@ import random
 import torch
 import os
 import pandas as pd
+from omegaconf import OmegaConf
 
 from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
@@ -23,7 +24,12 @@ def run_benchmark(config):
     task_name = config.task.name
     if task_name not in task_registry:
         raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
-    task = task_registry[task_name]()
+    
+    Task = task_registry[task_name]   # Get the task class from the registry
+    
+    task_kwargs = OmegaConf.to_container(config.task, resolve=True) or {} # Convert Hydra node to a dict
+    task_kwargs.pop("name", None)  # Remove the 'name' key if it exists
+    task = Task(**task_kwargs)  # Initialize the task with the provided parameters
 
     method = config.inference.method.upper()
     num_simulations = config.inference.num_simulations

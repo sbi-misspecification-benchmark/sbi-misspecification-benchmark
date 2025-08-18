@@ -73,29 +73,29 @@ class LikelihoodMisspecifiedTask:
 
     def __init__(
         self,
-        dim: int = 2,
-        tau_m: float = 2.0,  # Misspecified likelihood variance
-        lambda_val: float = 0.5,  # Mixture weight
+        dim: int,
+        tau_m: float,  # Misspecified likelihood variance
+        lambda_val: float,  # Mixture weight
     ):
         """Initialize the Gaussian misspecified likelihood task.
 
         Args:
             dim (int): Dimensionality of the parameter space
             tau_m (float): Variance factor for the misspecified likelihood
-            lambda_val (float): Mixture weight
+            lambda_val (float): Mixture weight in [0, 1]
         """
-        self.dim = dim
+        self.dim = int(dim)
 
         # misspeciifcation parameters
-        self.tau_m = tau_m
-        self.lambda_val = lambda_val
+        self.tau_m = float(tau_m)
+        self.lambda_val = float(lambda_val)
 
         # prior parameters
-        self.mu_prior = torch.ones(dim)
-        self.sigma_prior = torch.eye(dim)
+        self.mu_prior = torch.ones(self.dim)
+        self.sigma_prior = torch.eye(self.dim)
 
         # Setup ground truth model
-        self.ground_truth = GroundTruthModel(dim=dim)
+        self.ground_truth = GroundTruthModel(dim=self.dim)
 
         # define prior
         self.prior = self.ground_truth.prior_dist
@@ -150,7 +150,7 @@ class LikelihoodMisspecifiedTask:
         return samples.reshape(10_000, self.dim)
 
 
-    def simulator(self, thetas):
+    def simulator(self, thetas:torch.Tensor):
         """Simulate observations x given parameters theta under a misspecified likelihood model.
 
         Args:
