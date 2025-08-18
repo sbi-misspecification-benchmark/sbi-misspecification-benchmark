@@ -14,7 +14,6 @@ Usage:
 import argparse
 from pathlib import Path
 import sys
-from typing import Optional
 
 import pandas as pd
 from src.utils.csv_utils import gather_csv_files, read_csv_files, ensure_columns
