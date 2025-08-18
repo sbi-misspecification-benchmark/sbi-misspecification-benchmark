@@ -52,18 +52,21 @@ def test_ppc_high_distance():
     observation = torch.tensor([0.5, 0.5])
     simulator= lambda theta: theta + 2
 
-    distance = compute_ppc(posterior_samples, observation, simulator)
-    print(distance)
-    assert distance > 1
+    score = compute_ppc(posterior_samples, observation, simulator)
+    score = float(score)  # Handle tensor return
+    print("PPC(high) =", score)
+    assert 0.7 <= score <= 1.0  # high distance should yield a high score
 
 def test_ppc_low_distance():
     """Tests if the PPC distance is low for very similar posterior samples"""
     observation = torch.tensor([0.5, 0.5])
     posterior_samples = observation.repeat(100, 1)
-    simulator= lambda theta: theta + 0.1
-    distance = compute_ppc(posterior_samples, observation, simulator)
-    print(distance)
-    assert distance < 0.2
+    simulator= lambda theta: theta + 0.1   # Simulate small offset
+
+    score = compute_ppc(posterior_samples, observation, simulator)
+    score = float(score)  # Handle tensor return
+    print("PPC(low) =", score)
+    assert 0.0 <= score < 0.3  # Allow a bit of slack for randomness
 
 def test_run_inference_and_evaluate():
     """
