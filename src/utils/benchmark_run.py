@@ -90,7 +90,7 @@ def run_benchmark(config):
 
     # Save metrics.csv
     task_class_name = task.__class__.__name__
-    outdir = f"outputs/{task_name}_{method}/sims_{num_simulations}"   # !!! Changed task_class_name to task_name
+    outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
     os.makedirs(outdir, exist_ok=True)
     pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
     print(f"Saved metrics to {os.path.join(outdir, 'metrics.csv')}")

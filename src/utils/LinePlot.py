@@ -69,6 +69,7 @@ class LinePlot(BasePlot):
             data_sources: Union[str, Path, List[Union[str, Path]]],
             *,
             base_directory: Optional[Union[str, Path]] = None,
+            save_directory: Optional[Union[str, Path]] = None,
             filename: Optional[str] = None,
             plot_kwargs: Optional[dict] = None,
 
@@ -82,8 +83,9 @@ class LinePlot(BasePlot):
         super().__init__(
             data_sources,
             base_directory=base_directory,
+            save_directory=save_directory,
             filename=filename,
-            plot_kwargs=plot_kwargs,
+            plot_kwargs=plot_kwargs
         )
 
         self.row_order = row_order

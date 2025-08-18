@@ -41,7 +41,7 @@ def parse_args():
     return p.parse_args()
 
 
-def consolidate_metrics(input_dir: Path, files: Optional[list[Path]], output_file: Path) -> pd.DataFrame:
+def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     """
     Consolidate 'metrics.csv' files (of the same task and method) across simulations into one DataFrame.
 
