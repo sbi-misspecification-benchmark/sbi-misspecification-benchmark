@@ -6,6 +6,12 @@ from omegaconf import OmegaConf
 
 from src.utils.LinePlot import LinePlot
 from src.utils.consolidate_metrics import consolidate_metrics
+from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
+
+# Task registry to hold all available task classes
+task_registry = {
+    "misspecified_likelihood": LikelihoodMisspecifiedTask,
+}
 
 
 class PostProcessCallback(Callback):
@@ -24,8 +30,11 @@ class PostProcessCallback(Callback):
             cfg = OmegaConf.load(cfg_path)
 
             # Extract relevant config parameters (task, method, num_simulations)
-            # task = str(cfg.task.name)
-            task = "LikelihoodMisspecifiedTask"
+            task_name = config.task.name
+            if task_name not in task_registry:
+                raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
+            task = task_registry[task_name]().__class__.__name__
+
             method = str(cfg.inference.method)
             num_simulations = int(cfg.inference.num_simulations)
 
@@ -56,7 +65,7 @@ class PostProcessCallback(Callback):
             task = unique_task_methods.iloc[0]["task"]
             method = unique_task_methods.iloc[0]["method"]
 
-            save_directory = Path(f"outputs/LikelihoodMisspecifiedTask_{method}/plots") # TODO !! changed task to concrete
+            save_directory = Path(f"outputs/{task}_{method}/plots")
         else:
             # Multiple task-method combinations
             save_directory = Path("outputs/plots")
@@ -65,7 +74,7 @@ class PostProcessCallback(Callback):
         for _, row in unique_task_methods.iterrows():
             task = row["task"]
             method = row["method"]
-            input_dir = Path("outputs") / f"LikelihoodMisspecifiedTask_{method}"    # TODO !! changed task to concrete
+            input_dir = Path("outputs") / f"{task}_{method}"    # TODO !! changed task to concrete
             output_file = input_dir / "metrics_all.csv"
 
             consolidate_metrics(input_dir=input_dir, output_file=output_file)
