@@ -202,9 +202,9 @@ class BasePlot(ABC):
         plt.close(fig)
 
         # 3) Store and report the save path
-        self.save_path = save_path
-        print(f"Saved figure ➜ {save_path}")
-        return save_path
+        self.save_path = save_path.relative_to(self.base_directory)
+        print(f"Saved figure ➜ {self.save_path}")
+        return self.save_path
 
 
     @abstractmethod
