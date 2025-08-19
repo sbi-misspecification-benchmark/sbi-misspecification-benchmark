@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 
+
 def compute_ppc(posterior_samples, observation, simulator):
     """
     Compute the posterior predictive check distance by simulating the "observation" from posterior samples

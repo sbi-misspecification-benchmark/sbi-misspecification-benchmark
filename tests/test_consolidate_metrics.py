@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 from pathlib import Path
 
-from src.utils.consolidate_metrics import consolidate
+from src.utils.consolidate_metrics import consolidate_metrics
 
 
 def create_dummy_csv(path: Path, task: str, method: str, num_sim: int, obs_idx: int):
@@ -44,7 +44,7 @@ def test_consolidate_multiple_results(tmp_path):
 
     # Consolidate the results under the given input directory and save it at the given output directory
     output_file = tmp_path / "combined.csv"
-    df = consolidate(input_dir=base, output_file=output_file)
+    df = consolidate_metrics(input_dir=base, output_file=output_file)
 
     # Assert the new row length
     assert len(df) == 4
@@ -64,7 +64,7 @@ def test_consolidate_no_files(tmp_path):
 
     # Assert that a FileNotFoundError is raised when no metrics.csv files exist
     with pytest.raises(FileNotFoundError) as exc:
-        consolidate(input_dir=empty, output_file=output_file)
+        consolidate_metrics(input_dir=empty, output_file=output_file)
     assert "No metrics.csv under" in str(exc.value)
 
 
@@ -79,7 +79,7 @@ def test_consolidate_unreadable_files(tmp_path):
     output_file = tmp_path / "out.csv"
     # Since read_csv_files will skip the bad file, frames will be empty and consolidate should raise
     with pytest.raises(FileNotFoundError) as exc:
-        consolidate(base, output_file)
+        consolidate_metrics(base, output_file)
     assert "Failed to read any CSVs" in str(exc.value)
 
 
@@ -103,7 +103,7 @@ def test_consolidate_missing_required_column(tmp_path):
     # Running consolidate() should raise a ValueError about the missing column
     output_file = tmp_path / "out.csv"
     with pytest.raises(ValueError) as exc:
-        consolidate(base, output_file)
+        consolidate_metrics(base, output_file)
     assert "Missing required columns" in str(exc.value)
 
 
@@ -127,7 +127,7 @@ def test_consolidate_missing_value_in_required_column(tmp_path):
     # Running consolidate() should raise a ValueError about missing values
     output_file = tmp_path / "out.csv"
     with pytest.raises(ValueError) as exc:
-        consolidate(base, output_file)
+        consolidate_metrics(base, output_file)
 
     assert "Required columns contain missing values" in str(exc.value)
 
@@ -151,7 +151,7 @@ def test_consolidate_required_columns_reordered(tmp_path):
 
     # Run consolidate()
     output_file = tmp_path / "dummy.csv"
-    result_df = consolidate(base, output_file)
+    result_df = consolidate_metrics(base, output_file)
 
     # Check that output file was created
     assert output_file.exists()
@@ -187,7 +187,7 @@ def test_consolidate_extra_columns_reordered(tmp_path):
 
     # Run consolidate() (should succeed, sorting extra columns automatically)
     output_file = tmp_path / "dummy.csv"
-    result_df = consolidate(base, output_file)
+    result_df = consolidate_metrics(base, output_file)
 
     # Check that output file was created
     assert output_file.exists()

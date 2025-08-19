@@ -69,6 +69,7 @@ class LinePlot(BasePlot):
             data_sources: Union[str, Path, List[Union[str, Path]]],
             *,
             base_directory: Optional[Union[str, Path]] = None,
+            save_directory: Optional[Union[str, Path]] = None,
             filename: Optional[str] = None,
             plot_kwargs: Optional[dict] = None,
 
@@ -82,8 +83,9 @@ class LinePlot(BasePlot):
         super().__init__(
             data_sources,
             base_directory=base_directory,
+            save_directory=save_directory,
             filename=filename,
-            plot_kwargs=plot_kwargs,
+            plot_kwargs=plot_kwargs
         )
 
         self.row_order = row_order
@@ -107,10 +109,10 @@ class LinePlot(BasePlot):
         TITLE_vpos_block = 0.75     # relative vertical position in TOP_in
 
         # Super Axis Labels
-        SUP_XLABEL_pt = 12
-        SUP_YLABEL_pt = 12
-        SUP_XLABEL_vpos_block = 0.3     # relative vertical position in BOTTOM_in
-        SUP_YLABEL_hpos_block = 0.3     # relative horizontal position in LEFT_in
+        SUPXLABEL_pt = 12
+        SUPYLABEL_pt = 12
+        SUPXLABEL_vpos_block = 0.3     # relative vertical position in BOTTOM_in
+        SUPYLABEL_hpos_block = 0.3     # relative horizontal position in LEFT_in
 
 
         # 1.2 Grid Level
@@ -236,10 +238,38 @@ class LinePlot(BasePlot):
         vertical_grid_center = (top_bound + bottom_bound) / 2
         horizontal_grid_center = (left_bound + right_bound) / 2
 
+        # Grid size
+        # ...
+        grid_height = fig_height - (TOP_in + BOTTOM_in)
+        grid_width = fig_width - (LEFT_in + RIGHT_in)
+
         # Y-coordinates (figure-relative) for the top edges of all subplot rows
         row_top = [1 - (TOP_in + i * (SUBPLOT_HEIGHT_in + HSPACE_in)) / fig_height for i in range(num_rows)]
 
+        # Adjust Label size
+        K = 0.6
+        supx = "Number of Simulations"
+        metrics = df["metric"].astype(str).unique()
 
+        task_len = max(len(df.loc[df["task_metric"] == k, "task"].iloc[0]) for k in grid.row_names)
+        method_len = max(len(str(m)) for m in grid.col_names)
+        supx_len = len(supx)
+        supy_len = len(metrics[0]) if len(metrics) == 1 else 0
+        ylab_len = 0 if supy_len else max(len(df.loc[df["task_metric"] == k, "metric"].iloc[0]) for k in grid.row_names)
+
+        cands = [
+            72 * grid_width / (TASK_LABEL_pt * task_len * K),
+            72 * SUBPLOT_WIDTH_in / (METHOD_LABEL_pt * method_len * K),
+            72 * grid_width / (SUPXLABEL_pt * supx_len * K),
+            *([72 * grid_height / (SUPYLABEL_pt * supy_len * K)] if supy_len else []),
+            *([72 * SUBPLOT_HEIGHT_in / (SUPYLABEL_pt * ylab_len * K)] if ylab_len else []),
+        ]
+        s = min(1.0, *cands)
+
+        task_label_pt = TASK_LABEL_pt * s
+        method_label_pt = METHOD_LABEL_pt * s
+        supxlabel_pt = SUPXLABEL_pt * s
+        supylabel_pt = SUPYLABEL_pt * s
 
 
         # 3) Subplot Layout
@@ -348,6 +378,7 @@ class LinePlot(BasePlot):
             rect.set_in_layout(False)       # exclude from tight layout calculations
             grid.fig.add_artist(rect)       # add rectangle as a figure-level artist (not tied to any Axes)
 
+
             # Add task name label
             task_name = df.loc[df["task_metric"] == grid.row_names[i], "task"].iloc[0]
 
@@ -355,7 +386,7 @@ class LinePlot(BasePlot):
                 horizontal_grid_center, task_label_pos[i],
                 task_name,
                 ha="center", va="bottom",
-                fontsize=TASK_LABEL_pt, weight="bold"
+                fontsize=task_label_pt, weight="bold"
             )
 
 
@@ -376,7 +407,7 @@ class LinePlot(BasePlot):
                 x_center, method_label_pos,
                 str(method),
                 ha="center", va="bottom",
-                fontsize=METHOD_LABEL_pt, weight="medium", color="#222222",
+                fontsize=method_label_pt, weight="medium", color="#222222",
                 bbox=dict(
                     boxstyle="round,pad=0.2",
                     facecolor="#f0f0f0",
@@ -390,7 +421,7 @@ class LinePlot(BasePlot):
         grid.set_titles("")
 
         # Add a super x-axis label
-        supx_pos = (SUP_XLABEL_vpos_block * BOTTOM_in) / fig_height
+        supxlabel_pos = (SUPXLABEL_vpos_block * BOTTOM_in) / fig_height
 
         for ax in grid.axes.flat:
             ax.set_xlabel(None)
@@ -398,22 +429,22 @@ class LinePlot(BasePlot):
         grid.fig.supxlabel(
             "Number of Simulations",
             x=horizontal_grid_center,
-            y=supx_pos,
+            y=supxlabel_pos,
             ha="center",
             va="center",
-            fontsize=SUP_XLABEL_pt
+            fontsize=supxlabel_pt
         )
 
 
         # Add a super y-axis label if applicable
-        supy_pos = (SUP_YLABEL_hpos_block * LEFT_in) / fig_width
-
         unique_metrics = df["metric"].unique()
 
-        if len(unique_metrics) == 1:
+        if len(unique_metrics) == 1 and len(df["metric"]) != 1:
             # Only one metric; add a single super y-label
             for ax in grid.axes.flat:
                 ax.set_ylabel(None)
+
+            supy_pos = (SUPYLABEL_hpos_block * LEFT_in) / fig_width
 
             grid.fig.supylabel(unique_metrics[0],
                                x=supy_pos,
@@ -421,7 +452,7 @@ class LinePlot(BasePlot):
                                rotation="vertical",
                                ha="center",
                                va="center",
-                               fontsize=SUP_YLABEL_pt)
+                               fontsize=supylabel_pt)
 
         else:
             # Multiple metrics; add row-specific y-labels on the leftmost column
@@ -438,6 +469,7 @@ class LinePlot(BasePlot):
                 self.title,
                 x=horizontal_grid_center,
                 y=title_pos,
+                ha="center",
                 va="center",
                 fontsize=TITLE_pt,
                 fontweight="bold",
