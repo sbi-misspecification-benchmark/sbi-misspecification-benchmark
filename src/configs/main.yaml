@@ -1,7 +1,7 @@
 defaults:
   - task: misspecified_likelihood
   - inference: npe
-  - metric: ppc
+  - metric: c2st
   - _self_
 
 random_seed: 86
