@@ -93,4 +93,4 @@ def run_benchmark(config):
     outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
     os.makedirs(outdir, exist_ok=True)
     pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
-    print(f"Saved metrics to {os.path.join(outdir, 'metrics.csv')}")
+    print(f"Saved metrics ➜ {os.path.join(outdir, 'metrics.csv')}")
