@@ -33,17 +33,19 @@ class PostProcessCallback(Callback):
             task_name = config.task.name
             if task_name not in task_registry:
                 raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
-            task = task_registry[task_name]().__class__.__name__
+
+            # Initialize with arbitrary params to only infer the task class name
+            task_class_name = task_registry[task_name](1, 1, 1).__class__.__name__
 
             method = str(cfg.inference.method)
             num_simulations = int(cfg.inference.num_simulations)
 
             # Derive path to benchmark results file metrics.csv
-            metrics_path = Path("outputs") / f"{task}_{method}" / f"sims_{num_simulations}" / "metrics.csv"
+            metrics_path = Path("outputs") / f"{task_class_name}_{method}" / f"sims_{num_simulations}" / "metrics.csv"
 
             # Append record
             run_records.append({
-                "task": task,
+                "task": task_class_name,
                 "method": method,
                 "num_simulations": num_simulations,
                 "metrics_path": metrics_path,
