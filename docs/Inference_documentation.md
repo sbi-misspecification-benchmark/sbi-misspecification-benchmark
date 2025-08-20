@@ -2,13 +2,14 @@
 
 ---
 
-## Function: `run_inference(task, method_name, num_simulations)`
-
+## Function: `run_inference(task, method_name, num_simulations, num_posterior_samples, num_observations, seed=None, config=None, observations=None)`
 This function performs simulation-based inference (SBI) given:
-
-* A task (provides prior, simulator, observation)
-* A method name (NPE, NLE, or NRE)
-* A number of simulations
+* A task (provides prior, simulator, and observations)
+* An inference method ("NPE", "NLE", "NRE")
+* Number of simulations 
+* Number of posterior samples per observation
+* Number of observations to evaluate
+* Optional seed for reproducibility
 
 ---
 
@@ -27,8 +28,8 @@ The function is modular and supports multiple inference algorithms.
 | 2. Get Simulator          | Uses `task.get_simulator()` to define how to generate `x` from `θ`              |
 | 3. Simulate Training Data | Draws `(θ, x)` pairs by sampling from prior and running the simulator |
 | 4. Train Inference        | Uses `sbi` inference method (e.g. NPE) to learn a posterior approximation       |
-| 5. Posterior Sampling     | Uses the trained posterior to generate new samples given an observation         |
-
+| 5. Posterior Sampling     | Uses the trained posterior to generate new samples given an observation, save results and observation to disk         |
+| 7. Save results           |Save results and observation to disk to bes used for the evaluation step|
 ---
 
 ## Class: `DummyTask`
