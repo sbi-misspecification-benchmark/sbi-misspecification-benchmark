@@ -5,7 +5,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
-def compute_c2st(inference_samples, reference_samples, test_size, random_state):
+import matplotlib.pyplot as plt
+
+def compute_c2st(inference_samples, reference_samples, test_size, random_state, plot=True, obs_idx=None):
     """
     Computes the classifier two-sample test score
     by training a classifier to distinguish between inference_sample and reference_sample
@@ -15,6 +17,8 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state):
         reference_samples: posterior samples from the ground-truth model
         test_size: proportion of data to be used for testing
         random_state: random seed for reproducibility
+        plot: whether to plot the test score(optional)
+        obs_idx: index of observation (for plot title)
     Returns:
         accuracy(float): accuracy of classifier distinguishing between the two samples
     """
@@ -22,13 +26,33 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state):
     # target variables: 0 for inference_samples and 1 for reference_samples
     y = np.concatenate([np.zeros(len(inference_samples)), np.ones(len(reference_samples))])
     # split data in training and test set
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=random_state)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=test_size, random_state=random_state
+    )
     # initialize a classifier
-    classifier = LogisticRegression(random_state=random_state, max_iter=10000)
+    classifier = LogisticRegression(max_iter=10000)
     # train classifier
     classifier.fit(x_train, y_train)
     # use trained classifier on test data
     y_pred = classifier.predict(x_test)
     # compute accuracy, the c2st-score
     accuracy = accuracy_score(y_test, y_pred)
+
+
+    if plot and inference_samples.shape[1] == 2: #plots are only generated for samples with correct shape
+        plt.figure(figsize=(6, 6))
+        plt.scatter(inference_samples[:, 0], inference_samples[:, 1],
+                        alpha=0.5, label="Posterior (inference)")
+        plt.scatter(reference_samples[:, 0], reference_samples[:, 1],
+                        alpha=0.5, label="Reference posterior")
+        plt.xlabel("θ₁")
+        plt.ylabel("θ₂")
+        title = f"C2ST={accuracy:.3f}"
+        if obs_idx is not None:
+            title += f" (observation {obs_idx})"
+        plt.title(title)
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
     return accuracy
