@@ -1,13 +1,13 @@
 
 ---
 
-## Function: `evaluate_inference(task, method_name, metric_name)`
+## Function: `evaluate_inference(task, method_name, metric_name, num_simulations, obs_offset=0)`
 
 This function evaluates how well an inference method (e.g. NPE) approximates the true posterior using metrics C2ST or PPC. 
 
 Preconditions are:
 
-Posterior samples have been generated and saved using run_inference
+Posterior samples and observations have been generated and saved using run_inference
 
 The task provides a ground-truth posterior for comparison
 
@@ -18,8 +18,9 @@ The task provides a ground-truth posterior for comparison
 | Step              | Description                                                                |
 | ----------------- | -------------------------------------------------------------------------- |
 | 1. Load Data      | Loads posterior, observation, and reference samples                        |
-| 2. Compute Metric | Uses `compute_c2st()` or `compute_ppc()` based on input                    |
-| 3. Save Results   | Stores the result in CSV format in the corresponding task/method directory |
+| 2. Draw Reference | Samples from the task’s ground-truth posterior for the same observation    |
+| 3. Compute Metric | Uses `compute_c2st()` or `compute_ppc()` based on input                    |
+| 4. Save Results   | Stores the result in CSV format in the corresponding task/method directory |
 
 ---
 
@@ -38,7 +39,7 @@ The task provides a ground-truth posterior for comparison
 ```python
 
 task = DummyTask()
-evaluate_inference(task=task, method_name="NPE", metric_name="c2st")
+evaluate_inference(task=task, method_name="NPE", metric_name="c2st", num_simulations=200)
 ```
 
 Expected output:
@@ -54,7 +55,7 @@ C2ST for DummyTask/NPE: 0.850
 * The `task` must implement:
 
   * `get_simulator()`
-  * `get_reference_posterior_samples(idx)`
+  * `get_reference_posterior(observation)`
   * `get_observation(idx)`
 
 ---
