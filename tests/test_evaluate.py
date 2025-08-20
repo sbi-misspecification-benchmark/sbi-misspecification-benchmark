@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import os
 
@@ -8,20 +9,31 @@ from src.evaluation.metrics.ppc import compute_ppc
 from src.evaluation.evaluate_inference import evaluate_inference
 
 class DummyTask(BaseTask):
-    """
-    Dummy task for testing purposes
-    """
+    def __init__(self, dim=2, noise_std=0.5):
+        self.dim = dim
+        self.noise_std = noise_std
+        self.prior = torch.distributions.MultivariateNormal(
+            torch.zeros(dim), torch.eye(dim)
+        )
+
     def get_simulator(self):
-        return lambda theta: theta + 1
+        def sim(theta):
+            noise = torch.randn_like(theta) * self.noise_std
+            return theta + noise  # kein Bias, nur zufälliger noise
+        return sim
 
     def get_reference_posterior_samples(self, idx):
-        return torch.ones(100, 2)  # Fake samples
+        # Simuliere Verteilung ähnlich wie Posterior mit gleichem noise
+        return torch.randn(100, self.dim) * self.noise_std
 
     def get_observation(self, idx):
-        return torch.tensor([0.5, 0.5])
+        # Observation = theta + noise
+        theta = self.prior.sample((1,))
+        return theta + torch.randn_like(theta) * self.noise_std
 
     def get_prior(self):
-        return torch.distributions.MultivariateNormal(torch.zeros(2), torch.eye(2))
+        return self.prior
+
 
 def test_c2st_distinguishes():
     """
@@ -42,6 +54,24 @@ def test_c2st_on_identical_distribution():
     inference_samples = torch.randn(100, 2)
     accuracy= compute_c2st(reference_samples, inference_samples, 0.3, 12)
     assert (accuracy-0.5) < 0.1
+
+def test_c2st_similar_distributions():
+    """
+        Tests if the C2ST returns an accuracy close to 0.5 when both distributions are similar
+    """
+    np.random.seed(0)
+
+    mean1, mean2 = 0.0, 0.1
+    std = 1.0
+    n_samples = 1000
+
+    samples_a = np.random.normal(loc=mean1, scale=std, size=(n_samples, 1))
+    samples_b = np.random.normal(loc=mean2, scale=std, size=(n_samples, 1))
+
+    score = compute_c2st(samples_a, samples_b, test_size=0.5, random_state=42)
+
+
+    assert 0.50 < score < 0.75, f"Unexpected C2ST score: {score}"
 
 def test_ppc_high_distance():
     """

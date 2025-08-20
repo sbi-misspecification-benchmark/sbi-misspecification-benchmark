@@ -11,8 +11,8 @@ from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 # Task registry to hold all available task classes
 task_registry = {
     "misspecified_likelihood": LikelihoodMisspecifiedTask,
-}
 
+}
 
 def run_benchmark(config):
     random_seed = config.get('random_seed')
@@ -25,10 +25,10 @@ def run_benchmark(config):
     task_name = config.task.name
     if task_name not in task_registry:
         raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
-    
-    Task = task_registry[task_name]   # Get the task class from the registry
-    
-    task_kwargs = OmegaConf.to_container(config.task, resolve=True) or {} # Convert Hydra node to a dict
+
+    Task = task_registry[task_name]  # Get the task class from the registry
+
+    task_kwargs = OmegaConf.to_container(config.task, resolve=True) or {}  # Convert Hydra node to a dict
     task_kwargs.pop("name", None)  # Remove the 'name' key if it exists
     task = Task(**task_kwargs)  # Initialize the task with the provided parameters
 
@@ -36,6 +36,10 @@ def run_benchmark(config):
     num_simulations = config.inference.num_simulations
     num_observations = config.inference.num_observations
     num_posterior_samples = config.inference.num_posterior_samples
+
+    # the observation is fixed here and passed during the benchmarking process
+    observations = [task.get_observation(i) for i in range(num_observations)]
+
 
     print(
         f"\n Running {method} on task {task_name} with {num_simulations} simulations and {num_observations} observations\n")
@@ -47,9 +51,10 @@ def run_benchmark(config):
         seed=random_seed,
         num_posterior_samples=num_posterior_samples,
         num_observations=num_observations,
-        config=config
-    )
+        config=config,
+        observations=observations,
 
+    )
     # Determine which metrics to compute based on config
     metric_config = config.metric.name
     compute_c2st = metric_config in ["c2st", "c2st_ppc"]
@@ -58,6 +63,9 @@ def run_benchmark(config):
     # Evaluation: collect all metrics for all obs, save one metrics.csv
     all_metrics = []
     for obs_idx in range(num_observations):
+        x_o = observations[obs_idx]
+        metrics_dict = {"obs_idx": obs_idx, "task": task_name, "method": method}
+
         if compute_c2st:
             c2st_score = evaluate_inference(
                 task=task,
@@ -65,7 +73,9 @@ def run_benchmark(config):
                 metric_name="c2st",
                 num_observations=1,
                 num_simulations=num_simulations,
-                obs_offset=obs_idx
+                obs_offset=obs_idx,
+                observation=x_o,
+
             )
             all_metrics.append({
                 "metric": "c2st",
@@ -83,7 +93,8 @@ def run_benchmark(config):
                 metric_name="ppc",
                 num_observations=1,
                 num_simulations=num_simulations,
-                obs_offset=obs_idx
+                obs_offset=obs_idx,
+                observation=x_o,
             )
             all_metrics.append({
                 "metric": "ppc",

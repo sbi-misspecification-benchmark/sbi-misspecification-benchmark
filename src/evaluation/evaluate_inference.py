@@ -3,7 +3,7 @@ import torch
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
-def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations, obs_offset=0):
+def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations, obs_offset=0, observation=None):
     """
     Evaluate the metric for exactly one observation (used in loop in benchmark_run.py).
 
@@ -21,20 +21,33 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
     idx = obs_offset
     task_name = task.__class__.__name__
     obs_dir = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
-    posterior_samples = torch.load(os.path.join(obs_dir, 'posterior_samples.pt'), weights_only=True)
-    observation = task.get_observation(idx)
-    reference_samples = task.get_reference_posterior_samples(idx)
+    x_path = os.path.join(obs_dir, 'x_obs.pt')
+    post_path = os.path.join(obs_dir, 'posterior_samples.pt')
+
+    posterior_samples = torch.load(post_path, map_location='cpu')
+
+    # assures that the same observation is used
+    if os.path.exists(x_path):
+        observation = torch.load(x_path, map_location='cpu')
+    else:
+        observation = task.get_observation(idx)
+
+
+    ref_dist = task.get_reference_posterior(observation)
+    reference_samples = ref_dist.sample((posterior_samples.shape[0],)).cpu()
 
     if metric_name == "c2st":
         score = compute_c2st(
-            posterior_samples,
-            reference_samples,
+            posterior_samples.cpu().numpy(),
+            reference_samples.cpu().numpy(),
             test_size=0.3,
-            random_state=86
+            random_state=86,
+            plot=True,
+            obs_idx=idx+1
         )
     elif metric_name == "ppc":
         simulator = task.get_simulator()
-        score = compute_ppc(posterior_samples, observation, simulator)
+        score = compute_ppc(posterior_samples.cpu(), observation.cpu(), simulator)
     else:
         raise ValueError(f"Unknown metric: {metric_name}")
 
