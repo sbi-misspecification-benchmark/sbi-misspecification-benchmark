@@ -19,20 +19,23 @@ class DummyTask(BaseTask):
     def get_simulator(self):
         def sim(theta):
             noise = torch.randn_like(theta) * self.noise_std
-            return theta + noise  # kein Bias, nur zufälliger noise
+            return theta + noise
         return sim
 
     def get_reference_posterior_samples(self, idx):
-        # Simuliere Verteilung ähnlich wie Posterior mit gleichem noise
+        # not needed anymore
         return torch.randn(100, self.dim) * self.noise_std
 
     def get_observation(self, idx):
-        # Observation = theta + noise
         theta = self.prior.sample((1,))
         return theta + torch.randn_like(theta) * self.noise_std
 
     def get_prior(self):
         return self.prior
+
+    def get_reference_posterior(self, idx):
+        # we need this function for evaluation
+        return torch.randn(100, self.dim) * self.noise_std
 
 
 def test_c2st_distinguishes():
