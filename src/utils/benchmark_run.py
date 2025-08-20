@@ -15,6 +15,7 @@ task_registry = {
 
 }
 
+
 def run_benchmark(config):
     random_seed = config.get('random_seed')
     if random_seed is None:
@@ -27,9 +28,11 @@ def run_benchmark(config):
     if task_name not in task_registry:
         raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
 
-    Task = task_registry[task_name]  # Get the task class from the registry
+    
+    Task = task_registry[task_name]   # Get the task class from the registry
+    
+    task_kwargs = OmegaConf.to_container(config.task, resolve=True) or {} # Convert Hydra node to a dict
 
-    task_kwargs = OmegaConf.to_container(config.task, resolve=True) or {}  # Convert Hydra node to a dict
     task_kwargs.pop("name", None)  # Remove the 'name' key if it exists
     task = Task(**task_kwargs)  # Initialize the task with the provided parameters
 
@@ -64,8 +67,10 @@ def run_benchmark(config):
     # Evaluation: collect all metrics for all obs, save one metrics.csv
     all_metrics = []
     for obs_idx in range(num_observations):
+
         x_o = observations[obs_idx]
         metrics_dict = {"obs_idx": obs_idx, "task": task_name, "method": method}
+
 
         if compute_c2st:
             c2st_score = evaluate_inference(
@@ -78,7 +83,14 @@ def run_benchmark(config):
                 observation=x_o,
 
             )
-            metrics_dict["c2st"] = c2st_score
+            all_metrics.append({
+                "metric": "c2st",
+                "value": c2st_score,
+                "task": task_name,
+                "method": method,
+                "num_simulations": num_simulations,
+                "observation_idx": obs_idx,
+            })
 
         if compute_ppc:
             ppc_score = evaluate_inference(
@@ -90,13 +102,18 @@ def run_benchmark(config):
                 obs_offset=obs_idx,
                 observation=x_o,
             )
-            metrics_dict["ppc"] = ppc_score
-
-        all_metrics.append(metrics_dict)
+            all_metrics.append({
+                "metric": "ppc",
+                "value": ppc_score,
+                "task": task_name,
+                "method": method,
+                "num_simulations": num_simulations,
+                "observation_idx": obs_idx
+            })
 
     # Save metrics.csv
     task_class_name = task.__class__.__name__
     outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
     os.makedirs(outdir, exist_ok=True)
     pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
-    print(f"Saved metrics to {os.path.join(outdir, 'metrics.csv')}")
+    print(f"Saved metrics ➜ {os.path.join(outdir, 'metrics.csv')}")

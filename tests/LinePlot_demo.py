@@ -18,7 +18,7 @@ plot3 = LinePlot(
     data_sources="dummy_csv_6x8_grid_multimetrics.csv",
     title="Dummy 6x8 Benchmark Grid",
     row_order=["Task 3", "Task 2", "Task 1"],
-    col_order=["Method 6", "Method 5", "Method 4", "Method 3", "Method 2", "Method 1"]
+    col_order=["Method 8", "Method 7", "Method 6", "Method 5", "Method 4", "Method 3", "Method 2", "Method 1"]
 )
 
 # Create the plots
