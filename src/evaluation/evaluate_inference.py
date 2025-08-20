@@ -3,7 +3,7 @@ import torch
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
-def evaluate_inference(task, method_name, metric_name, num_observations, num_simulations, obs_offset=0, observation=None):
+def evaluate_inference(task, method_name, metric_name, num_simulations, obs_offset=0):
     """
     Evaluate the metric for exactly one observation (used in loop in benchmark_run.py).
 
@@ -11,7 +11,6 @@ def evaluate_inference(task, method_name, metric_name, num_observations, num_sim
         task: Task object with required interface.
         method_name (str): Inference method name.
         metric_name (str): Name of the metric ('c2st', 'ppc', etc).
-        num_observations (int): Should be 1 here.
         num_simulations (int): Simulation count.
         obs_offset (int): Which observation index to evaluate.
 

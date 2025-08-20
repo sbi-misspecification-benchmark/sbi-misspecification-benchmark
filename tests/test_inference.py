@@ -21,7 +21,7 @@ def test_run_inference():
     num_simulations = 200
     num_posterior_samples = 50
     num_observations = 10
-    print("Im finished")
+    print("I'm finished")
     for method_name in ["NPE", "NLE", "NRE"]:
         samples = run_inference(
             task,
