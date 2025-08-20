@@ -13,7 +13,7 @@ def test_config_override(monkeypatch, override_key, override_value):
         cfg = compose(config_name="main", overrides=[f"{override_key}={override_value}"])
         called = {}
 
-        def fake_run_inference(task, method_name, num_simulations, num_posterior_samples, num_observations, seed=None, config=None):
+        def fake_run_inference(task, method_name, num_simulations, num_posterior_samples, num_observations, seed=None, config=None,observations=None):
             called['num_simulations'] = num_simulations
             called['num_observations'] = num_observations
             called['num_posterior_samples'] = num_posterior_samples

@@ -68,7 +68,7 @@ def test_c2st_similar_distributions():
     samples_a = np.random.normal(loc=mean1, scale=std, size=(n_samples, 1))
     samples_b = np.random.normal(loc=mean2, scale=std, size=(n_samples, 1))
 
-    score = compute_c2st(samples_a, samples_b, test_size=0.5, random_state=42)
+    score = compute_c2st(samples_a, samples_b, test_size=0.5, random_state=42,plot=False)
 
 
     assert 0.50 < score < 0.75, f"Unexpected C2ST score: {score}"
