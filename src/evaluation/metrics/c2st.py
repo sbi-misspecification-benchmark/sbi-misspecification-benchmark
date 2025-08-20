@@ -24,6 +24,7 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
     y_pred = classifier.predict(x_test)
     accuracy = accuracy_score(y_test, y_pred)
 
+
     if plot:
         plt.figure(figsize=(6, 6))
         plt.scatter(inference_samples[:, 0], inference_samples[:, 1],

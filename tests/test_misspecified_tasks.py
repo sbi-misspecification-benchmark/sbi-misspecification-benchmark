@@ -9,20 +9,20 @@ def test_ground_truth_model_shapes():
 
 
 def test_likelihood_misspecified_get_true_parameter():
-    task = LikelihoodMisspecifiedTask(dim=4)
+    task = LikelihoodMisspecifiedTask(dim=4, tau_m=0.2, lambda_val=0.6)
     param = task.get_true_parameter(idx=42)
     assert isinstance(param, torch.Tensor)
     assert param.shape == (1, 4)
 
 
 def test_likelihood_misspecified_get_observation():
-    task = LikelihoodMisspecifiedTask(dim=2)
+    task = LikelihoodMisspecifiedTask(dim=2, tau_m=0.2, lambda_val=0.6)
     obs = task.get_observation(idx=1)
     assert obs.shape == (1, 2)
 
 
 def test_simulator_output_shape_and_type():
-    task = LikelihoodMisspecifiedTask(dim=2)
+    task = LikelihoodMisspecifiedTask(dim=2, tau_m=0.2, lambda_val=0.6)
     thetas = task.get_true_parameter(0).repeat(100, 1)
     sim_data = task.simulator(thetas)
     assert isinstance(sim_data, torch.Tensor)
@@ -30,7 +30,7 @@ def test_simulator_output_shape_and_type():
 
 
 def test_reference_posterior_sample_shape():
-    task = LikelihoodMisspecifiedTask(dim=2)
+    task = LikelihoodMisspecifiedTask(dim=2, tau_m=0.2, lambda_val=0.6)
     samples = task.get_reference_posterior_samples(idx=0)
     assert samples.shape == (10_000, 2)
 
@@ -44,13 +44,13 @@ def test_ground_truth_model_accessors():
 
 
 def test_get_simulator_callable():
-    task = LikelihoodMisspecifiedTask()
+    task = LikelihoodMisspecifiedTask(dim=2, tau_m=0.2, lambda_val=0.6)
     simulator_fn = task.get_simulator()
     assert callable(simulator_fn)
 
 
 def test_simulator_mixes_distributions():
-    task = LikelihoodMisspecifiedTask(dim=2, lambda_val=0.5)
+    task = LikelihoodMisspecifiedTask(dim=2,tau_m=0.2, lambda_val=0.6)
     thetas = task.get_true_parameter(0).repeat(1000, 1)
     output = task.simulator(thetas)
 

@@ -34,31 +34,48 @@ class BasePlot(ABC):
             data_sources: Union[str, Path, Iterable[Union[str, Path]]],
             *,
             base_directory: Optional[Union[str, Path]] = None,
+            save_directory: Optional[Union[str, Path]] = None,
             filename: Optional[str] = None,
-            extension: Optional[str] = "png",
+
             plot_kwargs: Optional[dict] = None,
     ):
+        # Normalization:
         # Normalize data_sources to a list of Path objects
         if isinstance(data_sources, (str, Path)):
-            ds = [Path(data_sources)]
+            self.data_sources = [Path(data_sources)]
         else:
-            ds = [Path(p) for p in data_sources]
-
-        self.data_sources = ds
-
+            self.data_sources = [Path(p) for p in data_sources]
 
         # Normalize base_directory to an absolute Path
         if base_directory is None:
-            bd = Path.cwd().resolve()
+            self.base_directory = Path.cwd().resolve()
         else:
-            bd = Path(base_directory).resolve()
+            self.base_directory = Path(base_directory).resolve()
 
-        self.base_directory = bd  # absolute Path
-        self.filename = filename
-        self.extension = extension
+        # Normalize save_directory to an absolute Path
+        if save_directory is None:
+            self.save_directory = self.base_directory / "outputs" / "plots"
+        else:
+            sd = Path(save_directory)
+            if not sd.is_absolute():
+                sd = self.base_directory / sd
+            self.save_directory = sd.resolve()
+
+        # Normalize filename and extension
+        if filename is None:
+            self._filename_is_default = True
+            self.stem = self.__class__.__name__     # name of the Subclass/Plot (e.g. "LinePlot")
+            self.extension = "png"
+        else:
+            self._filename_is_default = False
+            f = Path(filename)
+            self.stem = f.stem
+            # Use extension from filename if present, otherwise fallback to default extension "png"
+            self.extension = f.suffix.lstrip('.') if f.suffix else "png"
 
 
-        # Kwargs for plotting a .csv file (e.g.,{"marker": "o", "linestyle": "--"} )
+
+        # Kwargs for plotting a CSV file (e.g.,{"marker": "o", "linestyle": "--"})
         self.plot_kwargs = plot_kwargs or {}
 
         # Output attributes
@@ -151,34 +168,43 @@ class BasePlot(ABC):
 
 
     def save(self, fig: plt.Figure) -> Path:
-        # Determine the save path:
-        if self.filename:
-            stem = Path(self.filename).stem  # Gets the stem, regardless of whether the filename had an extension or not
-            save_path = (self.base_directory
-                         / "outputs"
-                         / "plots"
-                         / f"{stem}.{self.extension}")
-        else:
-            stem = self.__class__.__name__  # Name of the Subclass
-            desired_path = (self.base_directory
-                            / "outputs"
-                            / "plots"
-                            / f"{stem}.{self.extension}")
-            save_path = unique_path(desired_path)  # add a running ID to the stem if the desired path already exists
+        """
+            Save the figure to disk.
+
+            The final save path has the structure:
+                base_directory / save_dir / filename.extension
+
+            - base_directory: absolute root directory (default: cwd)
+            - save_dir: subdirectory inside base_directory (default: 'outputs/plots')
+            - filename: custom stem or class name (unique if not provided)
+
+            Args:
+                fig (plt.Figure): The matplotlib Figure to save.
+
+            Returns:
+                Path: The path where the figure was saved.
+            """
+        # 1) Determine the save path:
+        filename = f"{self.stem}.{self.extension}"
+        save_path = self.save_directory / filename
+
+        # If the filename was auto-generated (default),
+        # make it unique by appending a running ID to avoid accidental overwriting
+        if self._filename_is_default:
+            save_path = unique_path(save_path)
 
         # Ensure the save directory (and any missing parents) exists
         ensure_directory(save_path.parent)
 
 
-        # Save the figure to the save path and close it
+        # 2) Save the figure (under the save path)
         fig.savefig(save_path, dpi=300)
         plt.close(fig)
-        self.save_path = save_path
 
-
-        # Confirm that the figure was saved
-        print(f"Saved figure ➜ {save_path}")
-        return save_path
+        # 3) Store and report the save path
+        self.save_path = save_path.relative_to(self.base_directory)
+        print(f"Saved figure ➜ {self.save_path}")
+        return self.save_path
 
 
     @abstractmethod
