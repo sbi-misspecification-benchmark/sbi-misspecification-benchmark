@@ -22,7 +22,8 @@ def run_inference(
     num_posterior_samples,
     num_observations,
     seed=None,
-    config=None
+    config=None,
+    observations=None,
 ):
 
     """
@@ -39,6 +40,7 @@ def run_inference(
             NOTE: This parameter is used **solely for saving the configuration** to disk (e.g., as 'config_used.yaml').
             It is **not** used for extracting values such as `task`, `method_name`, or `num_observations`.
             All required arguments must be passed explicitly.
+        observations: (optional) Observations passed by benchmark_run.py to loop over.
 
     Returns:
         samples: Posterior samples from the last observation.
@@ -70,15 +72,24 @@ def run_inference(
 
     task_name = task.__class__.__name__  # get task name
 
+# for using Run_inference.py independently
+    if observations is None:
+        observations = [task.get_observation(i) for i in range(num_observations)]
+
     # Loop over observations
     for idx in range(num_observations):
-        x_obs = task.get_observation(idx=idx)
+        x_obs = observations[idx]
+        # shape handling
+        if x_obs.ndim == 2 and x_obs.shape[0] == 1:
+            x_obs = x_obs.squeeze(0)
+
         samples = posterior.sample((num_posterior_samples,), x=x_obs)
 
         # Create a new folder for each observation and save results
         output_dir = f"outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}/"
         os.makedirs(output_dir, exist_ok=True)
         torch.save(samples, os.path.join(output_dir, "posterior_samples.pt"))
+        torch.save(x_obs, os.path.join(output_dir, "x_obs.pt")) # saves the observation to be used for evaluation
 
         # Save config in each observation folder
         if config is not None:
