@@ -1,6 +1,6 @@
 import torch
 
-from inference.Run_Inference import run_inference
+from src.inference.Run_Inference import run_inference
 from src.evaluation.metrics.c2st import compute_c2st
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 
