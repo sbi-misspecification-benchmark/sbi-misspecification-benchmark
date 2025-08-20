@@ -25,7 +25,7 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
     accuracy = accuracy_score(y_test, y_pred)
 
 
-    if plot:
+    if plot and inference_samples.shape[1] == 2: #plots are only generated for samples with correct shape
         plt.figure(figsize=(6, 6))
         plt.scatter(inference_samples[:, 0], inference_samples[:, 1],
                         alpha=0.5, label="Posterior (inference)")
