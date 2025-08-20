@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import torch.distributions as D
 import os
 
 from Base_Task import BaseTask
@@ -33,9 +34,10 @@ class DummyTask(BaseTask):
     def get_prior(self):
         return self.prior
 
-    def get_reference_posterior(self, idx):
-        # we need this function for evaluation
-        return torch.randn(100, self.dim) * self.noise_std
+    def get_reference_posterior(self, observation):
+        mean = torch.zeros(self.dim)
+        cov = torch.eye(self.dim)
+        return D.MultivariateNormal(mean, cov)
 
 
 def test_c2st_distinguishes():
