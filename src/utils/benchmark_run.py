@@ -71,11 +71,8 @@ def run_benchmark(config):
                 task=task,
                 method_name=method,
                 metric_name="c2st",
-                num_observations=1,
                 num_simulations=num_simulations,
                 obs_offset=obs_idx,
-                observation=x_o,
-
             )
             all_metrics.append({
                 "metric": "c2st",
@@ -91,10 +88,8 @@ def run_benchmark(config):
                 task=task,
                 method_name=method,
                 metric_name="ppc",
-                num_observations=1,
                 num_simulations=num_simulations,
                 obs_offset=obs_idx,
-                observation=x_o,
             )
             all_metrics.append({
                 "metric": "ppc",

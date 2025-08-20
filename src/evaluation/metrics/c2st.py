@@ -18,7 +18,7 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
         test_size: proportion of data to be used for testing
         random_state: random seed for reproducibility
         plot: whether to plot the test score(optional)
-        obs_idx: index of observation to use
+        obs_idx: index of observation (for plot title)
     Returns:
         accuracy(float): accuracy of classifier distinguishing between the two samples
     """
