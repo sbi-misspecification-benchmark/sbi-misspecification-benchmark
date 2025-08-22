@@ -26,6 +26,9 @@ class LinePlot(BasePlot):
         Args:
             data_sources (str | Path | list[str | Path]):
                 One or more CSV files or directories to load (e.g. "metrics.csv").
+            x (str):
+                The name of the column to be plotted on the x-Axis.
+                Default "num_simulations".
             base_directory (str | Path, optional):
                 Root directory used to resolve relative paths and save outputs.
             filename (str, optional):
@@ -68,6 +71,8 @@ class LinePlot(BasePlot):
             self,
             data_sources: Union[str, Path, List[Union[str, Path]]],
             *,
+            x: str = "num_simulations",
+
             base_directory: Optional[Union[str, Path]] = None,
             save_directory: Optional[Union[str, Path]] = None,
             filename: Optional[str] = None,
@@ -80,6 +85,8 @@ class LinePlot(BasePlot):
             err_style: Optional[str] = None
 
     ):
+        self.x = x
+
         super().__init__(
             data_sources,
             base_directory=base_directory,
@@ -191,7 +198,7 @@ class LinePlot(BasePlot):
         grid = sns.relplot(
             data=df,
 
-            x="num_simulations",
+            x=self.x,
             y="value",
             row="task_metric",
             col="method",
@@ -248,7 +255,7 @@ class LinePlot(BasePlot):
 
         # Adjust Label size
         K = 0.6
-        supx = "Number of Simulations"
+        supx = self.x
         metrics = df["metric"].astype(str).unique()
 
         task_len = max(len(df.loc[df["task_metric"] == k, "task"].iloc[0]) for k in grid.row_names)
@@ -276,8 +283,8 @@ class LinePlot(BasePlot):
         # 3.1 Axes Limits and Scales
         # Calculate x-axis limits
         # Ensure consistent visual padding to the left and right of the data range, regardless of x-axis scale
-        x_min = df["num_simulations"].min()
-        x_max = df["num_simulations"].max()
+        x_min = df[self.x].min()
+        x_max = df[self.x].max()
 
         if self.log_x:
             xlim = (x_min * 0.5, x_max * 2)
@@ -427,7 +434,7 @@ class LinePlot(BasePlot):
             ax.set_xlabel(None)
 
         grid.fig.supxlabel(
-            "Number of Simulations",
+            self.x,
             x=horizontal_grid_center,
             y=supxlabel_pos,
             ha="center",
