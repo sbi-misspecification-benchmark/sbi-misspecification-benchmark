@@ -21,7 +21,16 @@ plot3 = LinePlot(
     col_order=["Method 8", "Method 7", "Method 6", "Method 5", "Method 4", "Method 3", "Method 2", "Method 1"]
 )
 
+# Plot 4
+plot4 = LinePlot(
+    x="tau_m",
+    data_sources="dummy_csv_4x4_grid_with_tau.csv",
+    title="Dummy 4x4 Benchmark Grid (C2ST vs Tau)",
+    log_x=False
+    )
+
 # Create the plots
 plot1.run()
 plot2.run()
 plot3.run()
+plot4.run()
