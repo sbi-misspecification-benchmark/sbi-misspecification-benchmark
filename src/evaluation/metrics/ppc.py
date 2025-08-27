@@ -20,10 +20,9 @@ def compute_ppc(posterior_samples, observation, simulator):
 
     # compute the absolute distance between each pair
     l2_distance = torch.norm((observation - simulated_x), dim= -1)
-    # torch.tensor([np.median(l2_distance.numpy()).astype(np.float32)]).item()   # From SBI
-    # mean distance across all samples
+    
 
-    median = torch.median(l2_distance)
+    median = torch.median(l2_distance).numpy()
 
     score = median / (0.5 + median) # to ensure the score is in [0, 1]
 
