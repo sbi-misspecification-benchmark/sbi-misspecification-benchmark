@@ -5,7 +5,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
-def compute_c2st(inference_samples, reference_samples, test_size, random_state):
+import matplotlib.pyplot as plt
+
+def compute_c2st(inference_samples, reference_samples, test_size, random_state, plot=True, obs_idx=None):
     """
     Computes the classifier two-sample test score
     by training a classifier to distinguish between inference_sample and reference_sample
@@ -15,6 +17,8 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state):
         reference_samples: posterior samples from the ground-truth model
         test_size: proportion of data to be used for testing
         random_state: random seed for reproducibility
+        plot: whether to plot the test score(optional)
+        obs_idx: index of observation (for plot title)
     Returns:
         accuracy(float): accuracy of classifier distinguishing between the two samples
     """
@@ -22,7 +26,9 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state):
     # target variables: 0 for inference_samples and 1 for reference_samples
     y = np.concatenate([np.zeros(len(inference_samples)), np.ones(len(reference_samples))])
     # split data in training and test set
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=random_state)
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=test_size, random_state=random_state
+    )
     # initialize a classifier
     classifier = LogisticRegression(random_state=random_state, max_iter=10000)
     # train classifier
@@ -31,4 +37,5 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state):
     y_pred = classifier.predict(x_test)
     # compute accuracy, the c2st-score
     accuracy = accuracy_score(y_test, y_pred)
+
     return accuracy

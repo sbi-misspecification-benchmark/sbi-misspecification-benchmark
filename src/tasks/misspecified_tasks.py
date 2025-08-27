@@ -194,8 +194,15 @@ class LikelihoodMisspecifiedTask:
         """Return simulator function."""
         return self.simulator
 
+    def get_reference_posterior(self, observation: torch.Tensor):
+        """Return the reference posterior distribution given an observation."""
+        if observation.ndim == 2:
+            observation = observation.squeeze(0)
 
+        mean = 0.5 * (observation + self.mu_prior)
+        cov = self.ground_truth.get_sigma_likelihood() / 2
 
+        return D.MultivariateNormal(mean, cov)
 
 
 if __name__ == "__main__":
