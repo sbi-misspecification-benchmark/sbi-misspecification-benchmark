@@ -1,11 +1,9 @@
-# This script didn't run for me if I didnt set the KMP_DUPLICATE_LIB_OK environment variable
-# import os
-# os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 from omegaconf import OmegaConf
 import torch
 from sbi.inference import NPE, NLE, NRE
 import yaml
-import os
+from pathlib import Path
+
 
 # List of inference methods
 methods = {
@@ -86,14 +84,15 @@ def run_inference(
         samples = posterior.sample((num_posterior_samples,), x=x_obs)
 
         # Create a new folder for each observation and save results
-        output_dir = f"outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}/"
-        os.makedirs(output_dir, exist_ok=True)
-        torch.save(samples, os.path.join(output_dir, "posterior_samples.pt"))
-        torch.save(x_obs, os.path.join(output_dir, "x_obs.pt")) # saves the observation to be used for evaluation
+        output_dir = Path("outputs") / f"{task_name}_{method_name}" / f"sims_{num_simulations}" / f"obs_{idx}"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        torch.save(samples, output_dir / "posterior_samples.pt")
+        torch.save(x_obs, output_dir / "x_obs.pt") # saves the observation to be used for evaluation
 
         # Save config in each observation folder
         if config is not None:
-            with open(os.path.join(output_dir, "config_used.yaml"), "w") as f:
+            config_path = output_dir / "config_used.yaml"
+            with config_path.open("w") as f:
                 yaml.dump(OmegaConf.to_container(config, resolve=True), f)
 
     return samples

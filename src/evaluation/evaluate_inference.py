@@ -1,5 +1,5 @@
-import os
 import torch
+from pathlib import Path
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
@@ -19,17 +19,22 @@ def evaluate_inference(task, method_name, metric_name, num_simulations, obs_offs
     """
     idx = obs_offset
     task_name = task.__class__.__name__
-    obs_dir = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
-    x_path = os.path.join(obs_dir, 'x_obs.pt')
-    post_path = os.path.join(obs_dir, 'posterior_samples.pt')
+    obs_dir = Path(f"outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}")
+    x_path = obs_dir/"x_obs.pt"
+    post_path = obs_dir/"posterior_samples.pt"
 
-    posterior_samples = torch.load(post_path, map_location='cpu')
-
-    # assures that the same observation is used
-    if os.path.exists(x_path):
-        observation = torch.load(x_path, map_location='cpu')
+    # Load posterior_samples.pt; raise if missing
+    if post_path.exists():  
+        posterior_samples = torch.load(post_path, map_location='cpu', weights_only=True)
     else:
-        observation = task.get_observation(idx)
+        raise FileNotFoundError(f"Missing posterior samples at {post_path}.")
+
+
+    # Load x_obs.pt; raise if missing
+    if x_path.exists():
+        observation = torch.load(x_path, map_location='cpu', weights_only=True)
+    else:
+        raise FileNotFoundError(f"Missing observations at {x_path}.")
 
 
     ref_dist = task.get_reference_posterior(observation)

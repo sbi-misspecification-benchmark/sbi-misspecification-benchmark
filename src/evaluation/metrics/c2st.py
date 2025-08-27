@@ -30,29 +30,12 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
         x, y, test_size=test_size, random_state=random_state
     )
     # initialize a classifier
-    classifier = LogisticRegression(max_iter=10000)
+    classifier = LogisticRegression(random_state=random_state, max_iter=10000)
     # train classifier
     classifier.fit(x_train, y_train)
     # use trained classifier on test data
     y_pred = classifier.predict(x_test)
     # compute accuracy, the c2st-score
     accuracy = accuracy_score(y_test, y_pred)
-
-
-    if plot and inference_samples.shape[1] == 2: #plots are only generated for samples with correct shape
-        plt.figure(figsize=(6, 6))
-        plt.scatter(inference_samples[:, 0], inference_samples[:, 1],
-                        alpha=0.5, label="Posterior (inference)")
-        plt.scatter(reference_samples[:, 0], reference_samples[:, 1],
-                        alpha=0.5, label="Reference posterior")
-        plt.xlabel("θ₁")
-        plt.ylabel("θ₂")
-        title = f"C2ST={accuracy:.3f}"
-        if obs_idx is not None:
-            title += f" (observation {obs_idx})"
-        plt.title(title)
-        plt.legend()
-        plt.tight_layout()
-        plt.show()
 
     return accuracy
