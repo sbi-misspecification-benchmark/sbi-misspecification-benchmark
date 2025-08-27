@@ -11,6 +11,8 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
+      task.tau_m: ${task.tau_m}
+      task.lambda_val: ${task.lambda_val}
       inference.num_simulations: ${inference.num_simulations}
 
   callbacks:
