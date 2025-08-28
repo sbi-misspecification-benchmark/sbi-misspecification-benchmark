@@ -3,7 +3,7 @@ import torch
 import torch.distributions as D
 import os
 
-from Base_Task import BaseTask
+from src.tasks.Base_Task import BaseTask
 from src.inference.Run_Inference import run_inference
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
