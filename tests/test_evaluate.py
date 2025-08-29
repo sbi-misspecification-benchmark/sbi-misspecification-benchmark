@@ -3,7 +3,7 @@ import torch
 import torch.distributions as D
 import os
 
-from Base_Task import BaseTask
+from src.tasks.Base_Task import BaseTask
 from src.inference.Run_Inference import run_inference
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
@@ -17,27 +17,39 @@ class DummyTask(BaseTask):
             torch.zeros(dim), torch.eye(dim)
         )
 
-    def get_simulator(self):
-        def sim(theta):
-            noise = torch.randn_like(theta) * self.noise_std
-            return theta + noise
-        return sim
-
-    def get_reference_posterior_samples(self, idx):
-        # not needed anymore
-        return torch.randn(100, self.dim) * self.noise_std
-
-    def get_observation(self, idx):
-        theta = self.prior.sample((1,))
-        return theta + torch.randn_like(theta) * self.noise_std
-
     def get_prior(self):
         return self.prior
 
+    def get_true_parameter(self, idx: int): # deterministic per index (simple seed scheme)
+        torch.manual_seed(int(idx))
+        return self.prior.sample((1,))
+    
+    def get_observation(self, idx):
+        theta = self.prior.sample((1,))
+        return theta + torch.randn_like(theta) * self.noise_std
+    
     def get_reference_posterior(self, observation):
         mean = torch.zeros(self.dim)
         cov = torch.eye(self.dim)
         return D.MultivariateNormal(mean, cov)
+
+    def get_reference_posterior_samples(self, idx):
+        return torch.randn(100, self.dim) * self.noise_std
+
+    def simulator(self, theta):
+        noise = torch.randn_like(theta) * self.noise_std
+        return theta + noise
+
+    def get_simulator(self):            
+        return self.simulator
+    
+    
+
+
+
+    
+
+    
 
 
 def test_c2st_distinguishes():

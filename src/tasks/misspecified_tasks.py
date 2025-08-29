@@ -1,5 +1,6 @@
 import torch
-import torch.distributions as D
+import torch.distributions as dist
+from src.tasks.Base_Task import BaseTask
 
 
 class GroundTruthModel:
@@ -13,7 +14,7 @@ class GroundTruthModel:
         self.sigma_likelihood = torch.eye(dim)  # Likelihood covariance is identity matrix
 
         # Create distributions
-        self.prior_dist = D.MultivariateNormal(self.mu_prior, self.sigma_prior)
+        self.prior_dist = dist.MultivariateNormal(self.mu_prior, self.sigma_prior)
 
 
     def get_mu_prior(self):
@@ -48,7 +49,7 @@ class GroundTruthModel:
 
         # Generate one sample for each parameter vector
         data = torch.stack([
-            D.MultivariateNormal(param, self.sigma_likelihood).sample()
+            dist.MultivariateNormal(param, self.sigma_likelihood).sample()
             for param in parameters
         ])
 
@@ -61,13 +62,13 @@ class GroundTruthModel:
 
         mean = 0.5 * (observations + self.mu_prior)
         cov = self.sigma_likelihood/2
-        return D.MultivariateNormal(mean, cov)
+        return dist.MultivariateNormal(mean, cov)
 
 
 
 
 
-class LikelihoodMisspecifiedTask:
+class LikelihoodMisspecifiedTask(BaseTask):
     """Task for inference in a Gaussian model with misspecified likelihood."""
 
 
@@ -175,13 +176,13 @@ class LikelihoodMisspecifiedTask:
 
         # Process beta samples
         beta_mask = is_beta == 1
-        beta_samples = D.Beta(torch.tensor(2.), torch.tensor(5.)).sample((beta_mask.sum(), self.dim))
+        beta_samples = dist.Beta(torch.tensor(2.), torch.tensor(5.)).sample((beta_mask.sum(), self.dim))
         result[beta_mask] = beta_samples
 
         # Process normal samples
         # For samples where is_beta=0, we sample from N(theta, tau_m * I)
         normal_mask = ~beta_mask
-        normal_dist = D.MultivariateNormal(
+        normal_dist = dist.MultivariateNormal(
             loc=thetas[normal_mask],
             covariance_matrix=self.tau_m * torch.eye(self.dim)
         )
@@ -202,7 +203,7 @@ class LikelihoodMisspecifiedTask:
         mean = 0.5 * (observation + self.mu_prior)
         cov = self.ground_truth.get_sigma_likelihood() / 2
 
-        return D.MultivariateNormal(mean, cov)
+        return dist.MultivariateNormal(mean, cov)
 
 
 if __name__ == "__main__":
