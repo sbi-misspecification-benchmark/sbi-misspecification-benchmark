@@ -116,6 +116,8 @@ def gather_csv_files(
 
     for source in data_sources:
         source_path = Path(source)  # Source_path used for a direct file and directory
+        if not source_path.is_absolute():
+            source_path = base_directory / source_path
         matched: set[Path] = set()  # Matching .csv file paths for the source of this loop
 
         # 1) Direct file
