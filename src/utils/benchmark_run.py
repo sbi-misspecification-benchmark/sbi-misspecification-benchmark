@@ -1,12 +1,13 @@
 import random
 import torch
-import os
 import pandas as pd
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, ListConfig, DictConfig
+from pathlib import Path
 
 from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
+from src.utils.LinePlot import LinePlot
 
 
 # Task registry to hold all available task classes
@@ -60,55 +61,55 @@ def run_benchmark(config):
 
     )
     # Determine which metrics to compute based on config
-    metric_config = config.metric.name
-    compute_c2st = metric_config in ["c2st", "c2st_ppc"]
-    compute_ppc = metric_config in ["ppc", "c2st_ppc"]
+    metrics_raw = config.metric
+
+    # NOrmalize metrics_raw to a list
+    if isinstance(metrics_raw, (list, ListConfig)):
+        metrics_items = list(metrics_raw)
+    elif metrics_raw is None:
+        metrics_items = []
+    else:
+        metrics_items = [metrics_raw]
+
+    metric_name = str(getattr(config.metric, "name", config.metric)).lower()
+    metrics = [metric_name]  # keep your existing for-loop over `metrics`
+    print(f"metrics resolved: {metrics}")
+
+
 
     # Evaluation: collect all metrics for all obs, save one metrics.csv
     all_metrics = []
     for obs_idx in range(num_observations):
-
-        x_o = observations[obs_idx]
-        metrics_dict = {"obs_idx": obs_idx, "task": task_name, "method": method}
-
-
-        if compute_c2st:
-            c2st_score = evaluate_inference(
+        for metric in metrics:
+            metric_name = metric
+            score = evaluate_inference(
                 task=task,
-                method_name=method,
-                metric_name="c2st",
-                num_simulations=num_simulations,
-                obs_offset=obs_idx,
+                method_name = method,
+                metric_name = metric_name,
+                num_simulations = num_simulations,
+                obs_offset = obs_idx,
             )
             all_metrics.append({
-                "metric": "c2st",
-                "value": c2st_score,
+                "metric": metric_name,
+                "value": score,
                 "task": task_name,
                 "method": method,
                 "num_simulations": num_simulations,
                 "observation_idx": obs_idx,
             })
 
-        if compute_ppc:
-            ppc_score = evaluate_inference(
-                task=task,
-                method_name=method,
-                metric_name="ppc",
-                num_simulations=num_simulations,
-                obs_offset=obs_idx,
-            )
-            all_metrics.append({
-                "metric": "ppc",
-                "value": ppc_score,
-                "task": task_name,
-                "method": method,
-                "num_simulations": num_simulations,
-                "observation_idx": obs_idx
-            })
-
     # Save metrics.csv
     task_class_name = task.__class__.__name__
-    outdir = f"outputs/{task_class_name}_{method}/sims_{num_simulations}"
-    os.makedirs(outdir, exist_ok=True)
-    pd.DataFrame(all_metrics).to_csv(os.path.join(outdir, "metrics.csv"), index=False)
-    print(f"Saved metrics ➜ {os.path.join(outdir, 'metrics.csv')}")
+    outdir = Path(f"outputs/{task_class_name}_{method}/sims_{num_simulations}")
+    outdir.mkdir(parents=True, exist_ok=True)
+
+    df = pd.DataFrame(all_metrics)
+
+    if df.empty:
+        print("No metrics to save.")
+    else:
+        # Save one .csv for each metric
+        for metric_name, subdf in df.groupby("metric"):
+            csv_path = outdir/f"metrics_{metric_name}.csv"
+            subdf.to_csv(csv_path, index=False)
+            print(f"Saved {metric_name} metrics ➜{csv_path}")

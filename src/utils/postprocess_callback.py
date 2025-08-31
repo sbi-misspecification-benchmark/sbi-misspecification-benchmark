@@ -37,7 +37,7 @@ class PostProcessCallback(Callback):
             # Initialize with arbitrary params to only infer the task class name
             task_class_name = task_registry[task_name](1, 1, 1).__class__.__name__
 
-            method = str(cfg.inference.method)
+            method = str(cfg.inference.method).upper()
             num_simulations = int(cfg.inference.num_simulations)
 
             # Derive path to benchmark results file metrics.csv
@@ -53,6 +53,8 @@ class PostProcessCallback(Callback):
 
         df = pd.DataFrame(run_records)
 
+        
+
 
         # 3) Visualize
         # 3.1) Get the data sources
@@ -61,6 +63,25 @@ class PostProcessCallback(Callback):
         # 3.2) Get the save directory
         # Get unique task-method pairs
         unique_task_methods = df[["task", "method"]].drop_duplicates()
+
+        # Consolidate all metrics.csv files into one DataFrame
+        for _, row in unique_task_methods.iterrows():
+            task = row["task"]
+            method = row["method"]
+            base_dir = Path("outputs") / f"{task}_{method}"
+
+            for sim_dir in base_dir.glob("sims_*"):
+                per_metric_files = list(sim_dir.glob("metrics_*.csv"))
+                if not per_metric_files:
+                    continue
+
+                if len(per_metric_files) == 1:
+                    df = pd.read_csv(per_metric_files[0])
+                else:
+                    df = pd.concat((pd.read_csv(p) for p in per_metric_files), ignore_index=True)
+
+                df.to_csv(sim_dir / "metrics.csv", index=False)
+
 
         if len(unique_task_methods) == 1:
             # Only one unique task-method combination
