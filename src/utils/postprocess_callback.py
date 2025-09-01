@@ -82,7 +82,7 @@ class PostProcessCallback(Callback):
         if len(unique_task_methods) == 1:
             # Only one unique task-method combination
             task = unique_task_methods.iloc[0]["task"]
-            method = unique_task_methods.iloc[0]["method"]
+            method = unique_task_methods.iloc[0]["method"].upper()
 
             save_directory = Path(f"outputs/{task}_{method}/plots")
         else:
