@@ -7,11 +7,7 @@ from omegaconf import OmegaConf
 from src.utils.LinePlot import LinePlot
 from src.utils.consolidate_metrics import consolidate_metrics
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
-
-# Task registry to hold all available task classes
-task_registry = {
-    "misspecified_likelihood": LikelihoodMisspecifiedTask,
-}
+from src.utils.benchmark_run import task_registry
 
 
 class PostProcessCallback(Callback):
@@ -35,7 +31,7 @@ class PostProcessCallback(Callback):
                 raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
 
             # Initialize with arbitrary params to only infer the task class name
-            task_class_name = task_registry[task_name](1, 1, 1).__class__.__name__
+            task_class_name = task_registry[task_name].__name__
 
             method = str(cfg.inference.method).upper()
             num_simulations = int(cfg.inference.num_simulations)
