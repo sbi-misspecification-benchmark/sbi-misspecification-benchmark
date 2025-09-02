@@ -106,7 +106,7 @@ def test_postprocess_multirun_consolidation(tmp_path, monkeypatch):
 
 
     # Check contents of one of the metric files 
-    metrics_file = tmp_path / "outputs/DummyTask_NPE/sims_10/metrics_c2st.csv"
+    metrics_file = simulations_path / "metrics_C2ST.csv"
     df = pd.read_csv(metrics_file)
     assert len(df) == 2, "Expected two rows for two observations"
 
