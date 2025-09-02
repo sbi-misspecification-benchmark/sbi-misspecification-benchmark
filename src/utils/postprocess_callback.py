@@ -40,8 +40,14 @@ class PostProcessCallback(Callback):
             method = str(cfg.inference.method)
             num_simulations = int(cfg.inference.num_simulations)
 
-            # Derive path to benchmark results file metrics.csv
-            metrics_path = Path("outputs") / f"{task_class_name}_{method}" / f"sims_{num_simulations}" / "metrics.csv"
+            # Derive path to benchmark results file metrics.csv including param folder
+            ignore_keys = {"name", "dim"}
+            params_dict = {k: v for k, v in cfg.task.items() if k not in ignore_keys}
+            param_folder = "_".join([f"{k}_{params_dict[k]}" for k in sorted(params_dict)]) if params_dict else ""
+            metrics_path = Path("outputs") / f"{task_class_name}_{method}"
+            if param_folder:
+                metrics_path = metrics_path / param_folder
+            metrics_path = metrics_path / f"sims_{num_simulations}" / "metrics.csv"
 
             # Append record
             run_records.append({

@@ -3,7 +3,16 @@ from pathlib import Path
 from src.evaluation.metrics.c2st import compute_c2st
 from src.evaluation.metrics.ppc import compute_ppc
 
-def evaluate_inference(task, method_name, metric_name, num_simulations, obs_offset=0):
+def build_param_folder(task_params):
+    """Build param subfolder string from dict, sorted by key."""
+    if not task_params:
+        return ""
+    # Exclude None values for robustness
+    items = [(k, v) for k, v in task_params.items() if v is not None]
+    items.sort()  # alphabetical order; or change to fixed order if you wish
+    return "_".join([f"{k}_{v}" for k, v in items])
+
+def evaluate_inference(task, method_name, metric_name, num_simulations, obs_offset=0, task_params=None):
     """
     Evaluate the metric for exactly one observation (used in loop in benchmark_run.py).
 
@@ -13,18 +22,24 @@ def evaluate_inference(task, method_name, metric_name, num_simulations, obs_offs
         metric_name (str): Name of the metric ('c2st', 'ppc', etc).
         num_simulations (int): Simulation count.
         obs_offset (int): Which observation index to evaluate.
+        task_params (dict): Dictionary of task parameter names/values for building output path.
 
     Returns:
         float: metric score for this observation.
     """
     idx = obs_offset
     task_name = task.__class__.__name__
-    obs_dir = Path(f"outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}")
+    param_folder = build_param_folder(task_params) if task_params else ""
+    if param_folder:
+        obs_dir = f'outputs/{task_name}_{method_name}/{param_folder}/sims_{num_simulations}/obs_{idx}'
+    else:
+        obs_dir = f'outputs/{task_name}_{method_name}/sims_{num_simulations}/obs_{idx}'
+    obs_dir = Path(obs_dir)
     x_path = obs_dir/"x_obs.pt"
     post_path = obs_dir/"posterior_samples.pt"
 
     # Load posterior_samples.pt; raise if missing
-    if post_path.exists():  
+    if post_path.exists():
         posterior_samples = torch.load(post_path, map_location='cpu', weights_only=True)
     else:
         raise FileNotFoundError(f"Missing posterior samples at {post_path}.")

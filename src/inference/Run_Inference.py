@@ -74,7 +74,15 @@ def run_inference(
     if observations is None:
         observations = [task.get_observation(i) for i in range(num_observations)]
 
-    # Loop over observations
+    # Get task parameters for folder structure
+    known_attrs = {"dim", "mu_prior", "sigma_prior", "ground_truth", "prior"}
+    task_params = {
+        k: v for k, v in vars(task).items()
+        if k not in known_attrs and not k.startswith('_')
+    }
+    # Build folder string, sorted for consistency
+    param_folder = "_".join([f"{k}_{task_params[k]}" for k in sorted(task_params)])
+
     for idx in range(num_observations):
         x_obs = observations[idx]
         # shape handling
@@ -83,11 +91,13 @@ def run_inference(
 
         samples = posterior.sample((num_posterior_samples,), x=x_obs)
 
-        # Create a new folder for each observation and save results
-        output_dir = Path("outputs") / f"{task_name}_{method_name}" / f"sims_{num_simulations}" / f"obs_{idx}"
+        output_dir = Path(f"outputs/{task_name}_{method_name}")
+        if param_folder:
+            output_dir = output_dir / param_folder
+        output_dir = output_dir / f"sims_{num_simulations}" / f"obs_{idx}"
         output_dir.mkdir(parents=True, exist_ok=True)
         torch.save(samples, output_dir / "posterior_samples.pt")
-        torch.save(x_obs, output_dir / "x_obs.pt") # saves the observation to be used for evaluation
+        torch.save(x_obs, output_dir / "x_obs.pt")
 
         # Save config in each observation folder
         if config is not None:
