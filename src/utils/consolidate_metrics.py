@@ -99,10 +99,20 @@ def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     # Final column order: base + sorted task params
     final_columns = base_fieldnames + task_param_columns
 
-    # Ensure all columns are present (add missing ones as NaN)
+    # Check for missing required columns FIRST
+    missing = [col for col in base_fieldnames if col not in combined.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing} in consolidated metrics.csv")
+
+    # Then: Ensure all columns are present (add missing ones as NaN, but after check above this is safe)
     for col in final_columns:
         if col not in combined.columns:
             combined[col] = pd.NA
+
+    # Now check if present required columns have any missing values
+    na_cols = [col for col in base_fieldnames if combined[col].isnull().any()]
+    if na_cols:
+        raise ValueError(f"Required columns contain missing values: {na_cols}")
 
     # Reorder columns
     combined = combined[final_columns]

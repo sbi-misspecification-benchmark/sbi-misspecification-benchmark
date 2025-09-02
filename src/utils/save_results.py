@@ -101,8 +101,11 @@ def save_results(
     fieldnames = base_fieldnames + metadata_fieldnames
 
     if file_mode == "append" and save_path.exists():
-        assert_csv_header_matches(save_path, fieldnames)
-
+        import pandas as pd
+        existing_df = pd.read_csv(save_path)
+        # Must match in both order and names
+        if list(existing_df.columns) != list(fieldnames):
+            raise ValueError("CSV header mismatch")
 
     # Write or append to the save path
     mode, write_header = resolve_file_mode(save_path, file_mode)  # Decide mode and header-writing behavior
