@@ -1,13 +1,12 @@
 import random
-import torch
 import pandas as pd
-from omegaconf import OmegaConf, ListConfig, DictConfig
+from omegaconf import OmegaConf, ListConfig
 from pathlib import Path
 
 from src.evaluation.evaluate_inference import evaluate_inference
 from src.inference.Run_Inference import run_inference
 from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
-from src.utils.LinePlot import LinePlot
+
 
 
 # Task registry to hold all available task classes
@@ -63,16 +62,8 @@ def run_benchmark(config):
     # Determine which metrics to compute based on config
     metrics_raw = config.metric
 
-    # NOrmalize metrics_raw to a list
-    if isinstance(metrics_raw, (list, ListConfig)):
-        metrics_items = list(metrics_raw)
-    elif metrics_raw is None:
-        metrics_items = []
-    else:
-        metrics_items = [metrics_raw]
-
     metric_name = str(getattr(config.metric, "name", config.metric)).lower()
-    metrics = [metric_name]  # keep your existing for-loop over `metrics`
+    metrics = [metric_name] if metric_name else [] # Default to empty list if no metric specified
     print(f"metrics resolved: {metrics}")
 
 
@@ -110,6 +101,6 @@ def run_benchmark(config):
     else:
         # Save one .csv for each metric
         for metric_name, subdf in df.groupby("metric"):
-            csv_path = outdir/f"metrics_{metric_name}.csv"
+            csv_path = outdir/f"metrics_{metric_name.upper()}.csv"
             subdf.to_csv(csv_path, index=False)
-            print(f"Saved {metric_name} metrics ➜{csv_path}")
+            print(f"Saved {metric_name.upper()} metrics ➜{csv_path}")

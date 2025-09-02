@@ -6,7 +6,6 @@ from omegaconf import OmegaConf
 
 from src.utils.LinePlot import LinePlot
 from src.utils.consolidate_metrics import consolidate_metrics
-from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
 from src.utils.benchmark_run import task_registry
 
 

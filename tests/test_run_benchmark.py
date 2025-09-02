@@ -31,8 +31,8 @@ def test_run_creates_expected_outputs(tmp_path, monkeypatch):
     base = tmp_path / "outputs/DummyTask_NPE/sims_10"
     assert base.exists(), "Output directory was not created"
 
-    single_metrics_file = base / "metrics_c2st.csv"
-    assert single_metrics_file.exists(), "metrics_c2st.csv was not created"
+    single_metrics_file = base / "metrics_C2ST.csv"
+    assert single_metrics_file.exists(), "metrics_C2ST.csv was not created"
 
 def multirun_cfg(metric_name: str):
     return OmegaConf.create({
@@ -93,8 +93,8 @@ def test_postprocess_multirun_consolidation(tmp_path, monkeypatch):
     base = tmp_path / "outputs/DummyTask_NPE"
     simulations_path = base / "sims_10"
 
-    assert (simulations_path / "metrics_ppc.csv").exists(), "metrics_ppc.csv was not created"
-    assert (simulations_path / "metrics_c2st.csv").exists(), "metrics_c2st.csv was not created"
+    assert (simulations_path / "metrics_PPC.csv").exists(), "metrics_PPC.csv was not created"
+    assert (simulations_path / "metrics_C2ST.csv").exists(), "metrics_C2ST.csv was not created"
 
     assert (simulations_path / "metrics.csv").exists(), "metrics.csv was not created -> Consolidation of metric-specific files failed"
     
