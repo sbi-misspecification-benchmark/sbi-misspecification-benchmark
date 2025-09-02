@@ -92,7 +92,7 @@ class PostProcessCallback(Callback):
         for _, row in unique_task_methods.iterrows():
             task = row["task"]
             method = row["method"]
-            input_dir = Path("outputs") / f"{task}_{method}"    # TODO !! changed task to concrete
+            input_dir = Path("outputs") / f"{task}_{method}"
             output_file = input_dir / "metrics_all.csv"
 
             consolidate_metrics(input_dir=input_dir, output_file=output_file)

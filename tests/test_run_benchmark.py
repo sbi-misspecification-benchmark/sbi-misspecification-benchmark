@@ -84,6 +84,8 @@ def test_postprocess_multirun_consolidation(tmp_path, monkeypatch):
     # Deactivate plotting to avoid Warnings during tests
     monkeypatch.setattr(LinePlot, "run", lambda self, *args, **kwargs: None)
 
+    # TEMPORARY: Re-Assert CWD, to check if the cwd is changed internally
+    monkeypatch.chdir(tmp_path)
 
     # Run PostProcessCallback
     PostProcessCallback().on_multirun_end(top_level_cfg)
