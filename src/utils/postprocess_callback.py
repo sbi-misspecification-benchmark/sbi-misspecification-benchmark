@@ -62,7 +62,7 @@ class PostProcessCallback(Callback):
         # Consolidate all metrics.csv files into one DataFrame
         for _, row in unique_task_methods.iterrows():
             task = row["task"]
-            method = row["method"]
+            method = row["method"].upper()
             base_dir = Path("outputs") / f"{task}_{method}"
 
             for sim_dir in base_dir.glob("sims_*"):
@@ -91,7 +91,7 @@ class PostProcessCallback(Callback):
         # 3.3) Consolidate metrics.csv files to metrics_all.csv files within their respective task_method folder
         for _, row in unique_task_methods.iterrows():
             task = row["task"]
-            method = row["method"]
+            method = row["method"].upper()
             input_dir = Path("outputs") / f"{task}_{method}"
             output_file = input_dir / "metrics_all.csv"
 
