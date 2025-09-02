@@ -4,6 +4,8 @@ defaults:
   - metric: ppc
   - _self_
 
+methods_sweep: "npe, nle"
+
 random_seed: 86
 postprocess: true
 
@@ -11,6 +13,7 @@ hydra:
   mode: MULTIRUN
   sweeper:
     params:
+      inference.method: ${methods_sweep}
       inference.num_simulations: ${inference.num_simulations}
 
   callbacks:
