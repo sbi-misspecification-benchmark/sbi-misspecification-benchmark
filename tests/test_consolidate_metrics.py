@@ -60,7 +60,7 @@ def test_consolidate_multiple_results(tmp_path):
 def test_consolidate_no_files(tmp_path):
     # Create an empty directory
     empty = tmp_path
-    output_file = tmp_path / "metrics_all.csv"
+    output_file = tmp_path / "metrics.csv"
 
     # Assert that a FileNotFoundError is raised when no metrics.csv files exist
     with pytest.raises(FileNotFoundError) as exc:
