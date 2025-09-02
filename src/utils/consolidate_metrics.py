@@ -1,10 +1,10 @@
 """
-Consolidate all 'metrics.csv' files (of the same task and method) across simulations into a single DataFrame.
+Consolidate all 'metrics.csv' files (of the same task and method) across simulations and parameter sweeps into a single DataFrame.
 
 This will:
-1. Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
+1. Recursively gather all 'metrics.csv' files under the given `input_dir`.
 2. Read and concatenate them into a single DataFrame.
-3. Validate and reorder columns.
+3. Dynamically detect all task parameter columns and ensure they are included in the output, sorted.
 4. Write the resulting DataFrame to 'output_file' as a .csv file, then return it.
 
 Usage:
@@ -22,14 +22,13 @@ from src.utils.csv_utils import gather_csv_files, read_csv_files, ensure_columns
 def parse_args():
     """Parse and return command-line arguments."""
     p = argparse.ArgumentParser(
-        description="Consolidate all 'metrics.csv' files (of the same task and method) across simulations into a "
-                    "single DataFrame."
+        description="Consolidate all 'metrics.csv' files (of the same task and method) across simulations and parameter sweeps into a single DataFrame."
     )
     p.add_argument(
         "--input_dir",
         type=Path,
         required=True,
-        help="Base directory containing sims_*/metrics.csv files to consolidate"
+        help="Base directory containing metrics.csv files to consolidate"
     )
     p.add_argument(
         "--output_file",
@@ -39,6 +38,9 @@ def parse_args():
     )
     return p.parse_args()
 
+def find_all_metrics_csvs(input_dir: Path):
+    # Recursively find all 'metrics.csv' files under input_dir
+    return list(input_dir.rglob("metrics.csv"))
 
 def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     """
@@ -62,7 +64,7 @@ def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     """
     # 1) Merge CSV files
     # 1.1) Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
-    csv_paths = gather_csv_files(data_sources="sims_*/metrics.csv", base_directory=input_dir)
+    csv_paths = find_all_metrics_csvs(input_dir)
     if not csv_paths:
         raise FileNotFoundError(f"No metrics.csv under {input_dir!r}")
 
@@ -75,6 +77,11 @@ def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     combined = pd.concat(frames, ignore_index=True)
 
 
+    # Determine all columns that appear in any frame
+    all_columns = set()
+    for df in frames:
+        all_columns.update(df.columns)
+
     # 2) Validate and reorder columns
     base_fieldnames = [
         "metric",
@@ -84,12 +91,33 @@ def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
         "num_simulations",
         "observation_idx",
     ]
-    combined = ensure_columns(combined, base_fieldnames)
+
+    # All other columns are assumed to be task parameters or extra metadata
+    task_param_columns = sorted([c for c in all_columns if c not in base_fieldnames])
 
 
-    # 3) Write out at given output directory 'output_file'
+    # Final column order: base + sorted task params
+    final_columns = base_fieldnames + task_param_columns
+
+    # Check for missing required columns FIRST
+    missing = [col for col in base_fieldnames if col not in combined.columns]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing} in consolidated metrics.csv")
+
+    # Then: Ensure all columns are present (add missing ones as NaN, but after check above this is safe)
+    for col in final_columns:
+        if col not in combined.columns:
+            combined[col] = pd.NA
+
+    # Now check if present required columns have any missing values
+    na_cols = [col for col in base_fieldnames if combined[col].isnull().any()]
+    if na_cols:
+        raise ValueError(f"Required columns contain missing values: {na_cols}")
+
+    # Reorder columns
+    combined = combined[final_columns]
+
     combined.to_csv(output_file, index=False)
-
     return combined
 
 

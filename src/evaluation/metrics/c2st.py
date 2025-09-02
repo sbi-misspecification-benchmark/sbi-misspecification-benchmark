@@ -4,10 +4,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
-
 import matplotlib.pyplot as plt
 
-def compute_c2st(inference_samples, reference_samples, test_size, random_state, plot=True, obs_idx=None):
+def compute_c2st(inference_samples, reference_samples, test_size, random_state, plot=True, obs_idx=None, save_dir="outputs"):
     """
     Computes the classifier two-sample test score
     by training a classifier to distinguish between inference_sample and reference_sample
@@ -19,6 +18,7 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
         random_state: random seed for reproducibility
         plot: whether to plot the test score(optional)
         obs_idx: index of observation (for plot title)
+        save_dir: directory to save plots if plotting is enabled
     Returns:
         accuracy(float): accuracy of classifier distinguishing between the two samples
     """
@@ -37,5 +37,28 @@ def compute_c2st(inference_samples, reference_samples, test_size, random_state, 
     y_pred = classifier.predict(x_test)
     # compute accuracy, the c2st-score
     accuracy = accuracy_score(y_test, y_pred)
+
+    if plot and inference_samples.shape[1] == 2:
+        plt.figure(figsize=(6, 6))
+        plt.scatter(inference_samples[:, 0], inference_samples[:, 1],
+                        alpha=0.5, label="Posterior (inference)")
+        plt.scatter(reference_samples[:, 0], reference_samples[:, 1],
+                        alpha=0.5, label="Reference posterior")
+        plt.xlabel("θ₁")
+        plt.ylabel("θ₂")
+        title = f"C2ST={accuracy:.3f}"
+        if obs_idx is not None:
+            title += f" (observation {obs_idx})"
+        plt.title(title)
+        plt.legend()
+        plt.tight_layout()
+
+        # Save each plot with a unique name
+        save_dir = save_dir or "outputs"
+        import os
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, f"C2ST_{obs_idx if obs_idx is not None else 'plot'}.png")
+        plt.savefig(save_path)
+        plt.close()
 
     return accuracy
