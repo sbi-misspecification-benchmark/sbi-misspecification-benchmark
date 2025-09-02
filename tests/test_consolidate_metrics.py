@@ -65,7 +65,7 @@ def test_consolidate_no_files(tmp_path):
     # Assert that a FileNotFoundError is raised when no metrics.csv files exist
     with pytest.raises(FileNotFoundError) as exc:
         consolidate_metrics(input_dir=empty, output_file=output_file)
-    assert "No metrics.csv under" in str(exc.value)
+    assert "No metrics_all.csv under" in str(exc.value)
 
 
 def test_consolidate_unreadable_files(tmp_path):

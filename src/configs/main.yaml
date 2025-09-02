@@ -4,13 +4,16 @@ defaults:
   - metric: ppc
   - _self_
 
+metrics_sweep: "c2st, ppc"
+
 random_seed: 86
 postprocess: true
 
 hydra:
   mode: MULTIRUN
   sweeper:
-    params:
+    params: 
+      metric: ${metrics_sweep} 
       inference.num_simulations: ${inference.num_simulations}
 
   callbacks:

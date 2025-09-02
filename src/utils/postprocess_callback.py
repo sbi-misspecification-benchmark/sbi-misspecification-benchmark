@@ -6,12 +6,7 @@ from omegaconf import OmegaConf
 
 from src.utils.LinePlot import LinePlot
 from src.utils.consolidate_metrics import consolidate_metrics
-from src.tasks.misspecified_tasks import LikelihoodMisspecifiedTask
-
-# Task registry to hold all available task classes
-task_registry = {
-    "misspecified_likelihood": LikelihoodMisspecifiedTask,
-}
+from src.utils.benchmark_run import task_registry
 
 
 class PostProcessCallback(Callback):
@@ -35,9 +30,9 @@ class PostProcessCallback(Callback):
                 raise ValueError(f"Unknown task: {task_name}. Available: {list(task_registry.keys())}")
 
             # Initialize with arbitrary params to only infer the task class name
-            task_class_name = task_registry[task_name](1, 1, 1).__class__.__name__
+            task_class_name = task_registry[task_name].__name__
 
-            method = str(cfg.inference.method)
+            method = str(cfg.inference.method).upper()
             num_simulations = int(cfg.inference.num_simulations)
 
             # Derive path to benchmark results file metrics.csv
@@ -53,6 +48,8 @@ class PostProcessCallback(Callback):
 
         df = pd.DataFrame(run_records)
 
+        
+
 
         # 3) Visualize
         # 3.1) Get the data sources
@@ -62,10 +59,29 @@ class PostProcessCallback(Callback):
         # Get unique task-method pairs
         unique_task_methods = df[["task", "method"]].drop_duplicates()
 
+        # Consolidate all metrics.csv files into one DataFrame
+        for _, row in unique_task_methods.iterrows():
+            task = row["task"]
+            method = row["method"].upper()
+            base_dir = Path("outputs") / f"{task}_{method}"
+
+            for sim_dir in base_dir.glob("sims_*"):
+                per_metric_files = list(sim_dir.glob("metrics_*.csv"))
+                if not per_metric_files:
+                    continue
+
+                if len(per_metric_files) == 1:
+                    df = pd.read_csv(per_metric_files[0])
+                else:
+                    df = pd.concat((pd.read_csv(p) for p in per_metric_files), ignore_index=True)
+
+                df.to_csv(sim_dir / "metrics.csv", index=False)
+
+
         if len(unique_task_methods) == 1:
             # Only one unique task-method combination
             task = unique_task_methods.iloc[0]["task"]
-            method = unique_task_methods.iloc[0]["method"]
+            method = unique_task_methods.iloc[0]["method"].upper()
 
             save_directory = Path(f"outputs/{task}_{method}/plots")
         else:
@@ -75,8 +91,8 @@ class PostProcessCallback(Callback):
         # 3.3) Consolidate metrics.csv files to metrics_all.csv files within their respective task_method folder
         for _, row in unique_task_methods.iterrows():
             task = row["task"]
-            method = row["method"]
-            input_dir = Path("outputs") / f"{task}_{method}"    # TODO !! changed task to concrete
+            method = row["method"].upper()
+            input_dir = Path("outputs") / f"{task}_{method}"
             output_file = input_dir / "metrics_all.csv"
 
             consolidate_metrics(input_dir=input_dir, output_file=output_file)
