@@ -62,7 +62,7 @@ def consolidate_metrics(input_dir: Path, output_file: Path) -> pd.DataFrame:
     """
     # 1) Merge CSV files
     # 1.1) Gather all 'metrics.csv' files from all simulation subfolders 'sim_*' at given input directory `input_dir`
-    csv_paths = gather_csv_files(data_sources="sims_*/metrics.csv", base_directory=input_dir)
+    csv_paths = gather_csv_files(data_sources="sims_*/metrics_all.csv", base_directory=input_dir)
     if not csv_paths:
         raise FileNotFoundError(f"No metrics.csv under {input_dir!r}")
 
